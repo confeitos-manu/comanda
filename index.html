@@ -242,7 +242,7 @@ async function sbSalvarCatalogo(prods){
 }
 
 async function sbCarregarCatalogo(){
-  return await sbFetch('/rest/v1/catalogo?order=nome.asc&limit=500');
+  return await sbFetch('/rest/v1/catalogo?select=cod,nome,preco,img,descricao,status&status=eq.ativo&order=nome.asc&limit=500');
 }
 
 /* --- CONTADOR --- */
@@ -472,10 +472,6 @@ async function sbProximoNum(){
     <div class="modal-header">
       <span class="modal-header-title">📦 Selecionar produto do catálogo</span>
       <div style="display:flex;gap:6px;align-items:center">
-        <label style="padding:4px 10px;background:#f0f0f0;border:1px solid #ccc;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;color:#444">
-          📂 CSV
-          <input type="file" accept=".csv" style="display:none" onchange="importarCatModal(event)">
-        </label>
         <button class="modal-close" onclick="fecharModalDireto()">×</button>
       </div>
     </div>
@@ -1164,16 +1160,12 @@ function renderModalCat(){
   var lista=document.getElementById('modal-lista');
   if(!CAT.length){
     lista.innerHTML='<div style="padding:20px;text-align:center;color:#aaa;font-size:13px;grid-column:1/-1">'
-      +'Catálogo vazio.<br><br>'
-      +'<label style="display:inline-block;padding:8px 16px;background:#222;color:#fff;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700">'
-      +'📂 Importar CSV do WhatsApp'
-      +'<input type="file" accept=".csv" style="display:none" onchange="importarCatModal(event)">'
-      +'</label>'
+      +'Catálogo vazio ou ainda carregando.<br><br>Cadastre produtos no seu catálogo online normalmente — eles aparecem aqui sozinhos.'
       +'</div>';
     return;
   }
   var filtrado=CAT.filter(function(p){
-    return !busca||p.nome.toLowerCase().indexOf(busca)>=0;
+    return !busca||p.nome.toLowerCase().indexOf(busca)>=0||(p.cod||'').toLowerCase().indexOf(busca)>=0;
   });
   if(!filtrado.length){
     lista.innerHTML='<div style="padding:20px;text-align:center;color:#aaa;font-size:13px;grid-column:1/-1">Nenhum produto encontrado</div>';
@@ -1184,8 +1176,8 @@ function renderModalCat(){
     var p=filtrado[i];
     var idx=CAT.indexOf(p);
     var imgTag=p.img ? '<img src="'+p.img+'" style="width:100%;height:100%;object-fit:cover">' : '🌸';
-    html+='<div class="cat-card" style="cursor:pointer" onclick="addDoCatModal('+idx+')">';
-    html+='<div class="cat-img">'+imgTag+'</div>';
+    html+='<div class="cat-card" style="cursor:pointer;position:relative" onclick="addDoCatModal('+idx+')">';
+    html+='<div class="cat-img">'+imgTag+(p.cod?'<span style="position:absolute;top:4px;left:4px;background:rgba(0,0,0,0.6);color:#fff;font-size:9px;padding:2px 5px;border-radius:6px;">#'+p.cod+'</span>':'')+'</div>';
     html+='<div class="cat-body">';
     html+='<div class="cat-nome">'+p.nome+'</div>';
     html+='<div class="cat-preco">R$ '+p.preco.toFixed(2).replace('.',',')+'</div>';
@@ -1196,7 +1188,7 @@ function renderModalCat(){
 }
 function addDoCatModal(idx){
   var p=CAT[idx]; if(!p) return;
-  ITS.push({n:p.nome,q:1,u:p.preco,img:null,imgUrl:p.img||null,tipoFlor:'',corFlor:'',corEmbal:''});
+  ITS.push({n:(p.cod?'#'+p.cod+' ':'')+p.nome,q:1,u:p.preco,img:null,imgUrl:p.img||null,tipoFlor:'',corFlor:'',corEmbal:''});
   render();
   fecharModalDireto();
 }
@@ -1256,7 +1248,7 @@ addItem();
     var cat = await sbCarregarCatalogo();
     if(cat && cat.length){
       CAT = cat.map(function(p){
-        return { nome: p.nome, preco: parseFloat(p.preco), img: p.img||'', desc: p.descricao||'' };
+        return { cod: p.cod||'', nome: p.nome, preco: parseFloat(p.preco), img: p.img||'', desc: p.descricao||'' };
       });
       renderCat();
       var _cc=document.getElementById('cat-card'); if(_cc) _cc.style.display='block';
