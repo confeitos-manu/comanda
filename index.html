@@ -245,6 +245,10 @@ async function sbCarregarCatalogo(){
   return await sbFetch('/rest/v1/catalogo?select=cod,nome,preco,img,descricao,status&status=eq.ativo&order=nome.asc&limit=500');
 }
 
+async function sbCarregarInspiracoes(){
+  return await sbFetch('/rest/v1/inspiracoes?select=cod,img,descricao&order=cod.asc&limit=500');
+}
+
 /* --- CONTADOR --- */
 async function sbProximoNum(){
   var rows = await sbFetch('/rest/v1/config?chave=eq.ultimo_num');
@@ -1176,11 +1180,15 @@ function renderModalCat(){
     var p=filtrado[i];
     var idx=CAT.indexOf(p);
     var imgTag=p.img ? '<img src="'+p.img+'" style="width:100%;height:100%;object-fit:cover">' : '🌸';
+    var selo = p.tipo==='inspiracao'
+      ? '<span style="position:absolute;top:4px;left:4px;background:rgba(200,120,0,0.85);color:#fff;font-size:9px;padding:2px 5px;border-radius:6px;">✨ #'+p.cod+'</span>'
+      : (p.cod?'<span style="position:absolute;top:4px;left:4px;background:rgba(0,0,0,0.6);color:#fff;font-size:9px;padding:2px 5px;border-radius:6px;">#'+p.cod+'</span>':'');
+    var precoTxt = p.tipo==='inspiracao' ? '<span style="color:#c78200">Defina o valor</span>' : ('R$ '+p.preco.toFixed(2).replace('.',','));
     html+='<div class="cat-card" style="cursor:pointer;position:relative" onclick="addDoCatModal('+idx+')">';
-    html+='<div class="cat-img">'+imgTag+(p.cod?'<span style="position:absolute;top:4px;left:4px;background:rgba(0,0,0,0.6);color:#fff;font-size:9px;padding:2px 5px;border-radius:6px;">#'+p.cod+'</span>':'')+'</div>';
+    html+='<div class="cat-img">'+imgTag+selo+'</div>';
     html+='<div class="cat-body">';
     html+='<div class="cat-nome">'+p.nome+'</div>';
-    html+='<div class="cat-preco">R$ '+p.preco.toFixed(2).replace('.',',')+'</div>';
+    html+='<div class="cat-preco">'+precoTxt+'</div>';
     html+='<div style="font-size:10px;color:#1a7a3c;margin-top:3px;font-weight:700">Toque para adicionar</div>';
     html+='</div></div>';
   }
@@ -1188,7 +1196,8 @@ function renderModalCat(){
 }
 function addDoCatModal(idx){
   var p=CAT[idx]; if(!p) return;
-  ITS.push({n:(p.cod?'#'+p.cod+' ':'')+p.nome,q:1,u:p.preco,img:null,imgUrl:p.img||null,tipoFlor:'',corFlor:'',corEmbal:''});
+  var nomeItem = p.tipo==='inspiracao' ? ('✨ Inspiração #'+p.cod) : ((p.cod?'#'+p.cod+' ':'')+p.nome);
+  ITS.push({n:nomeItem,q:1,u:p.preco||0,img:null,imgUrl:p.img||null,tipoFlor:'',corFlor:'',corEmbal:''});
   render();
   fecharModalDireto();
 }
@@ -1246,10 +1255,15 @@ addItem();
 
     // Carregar catálogo do Supabase
     var cat = await sbCarregarCatalogo();
-    if(cat && cat.length){
-      CAT = cat.map(function(p){
-        return { cod: p.cod||'', nome: p.nome, preco: parseFloat(p.preco), img: p.img||'', desc: p.descricao||'' };
-      });
+    var insp = await sbCarregarInspiracoes();
+    var catMapeado = (cat||[]).map(function(p){
+      return { tipo:'produto', cod: p.cod||'', nome: p.nome, preco: parseFloat(p.preco), img: p.img||'', desc: p.descricao||'' };
+    });
+    var inspMapeado = (insp||[]).map(function(p){
+      return { tipo:'inspiracao', cod: p.cod||'', nome: '✨ Inspiração #'+(p.cod||''), preco: 0, img: p.img||'', desc: p.descricao||'' };
+    });
+    CAT = catMapeado.concat(inspMapeado);
+    if(CAT.length){
       renderCat();
       var _cc=document.getElementById('cat-card'); if(_cc) _cc.style.display='block';
     } else {
