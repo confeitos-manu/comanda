@@ -242,7 +242,7 @@ async function sbSalvarCatalogo(prods){
 }
 
 async function sbCarregarCatalogo(){
-  return await sbFetch('/rest/v1/catalogo?select=cod,nome,preco,img,descricao,status&status=eq.ativo&order=nome.asc&limit=500');
+  return await sbFetch('/rest/v1/catalogo?select=cod,nome,preco,img,descricao,status,medias&order=nome.asc&limit=500');
 }
 
 async function sbCarregarInspiracoes(){
@@ -1182,6 +1182,8 @@ function renderModalCat(){
     var imgTag=p.img ? '<img src="'+p.img+'" style="width:100%;height:100%;object-fit:cover">' : '🌸';
     var selo = p.tipo==='inspiracao'
       ? '<span style="position:absolute;top:4px;left:4px;background:rgba(200,120,0,0.85);color:#fff;font-size:9px;padding:2px 5px;border-radius:6px;">✨ #'+p.cod+'</span>'
+      : p.tipo==='variacao'
+      ? '<span style="position:absolute;top:4px;left:4px;background:rgba(30,90,180,0.85);color:#fff;font-size:9px;padding:2px 5px;border-radius:6px;">🔀 #'+p.cod+'</span>'
       : (p.cod?'<span style="position:absolute;top:4px;left:4px;background:rgba(0,0,0,0.6);color:#fff;font-size:9px;padding:2px 5px;border-radius:6px;">#'+p.cod+'</span>':'');
     var precoTxt = p.tipo==='inspiracao' ? '<span style="color:#c78200">Defina o valor</span>' : ('R$ '+p.preco.toFixed(2).replace('.',','));
     html+='<div class="cat-card" style="cursor:pointer;position:relative" onclick="addDoCatModal('+idx+')">';
@@ -1256,8 +1258,21 @@ render();
     // Carregar catálogo do Supabase
     var cat = await sbCarregarCatalogo();
     var insp = await sbCarregarInspiracoes();
-    var catMapeado = (cat||[]).map(function(p){
-      return { tipo:'produto', cod: p.cod||'', nome: p.nome, preco: parseFloat(p.preco), img: p.img||'', desc: p.descricao||'' };
+    var catMapeado = [];
+    (cat||[]).forEach(function(p){
+      var statusTag = p.status==='esgotado' ? ' (esgotado)' : (p.status==='escondido' ? ' (oculto)' : '');
+      catMapeado.push({ tipo:'produto', cod: p.cod||'', nome: p.nome+statusTag, preco: parseFloat(p.preco), img: p.img||'', desc: p.descricao||'' });
+      (p.medias||[]).forEach(function(m){
+        if(!m || !m.cod || m.tipo==='ref') return; // variação de verdade (tem código próprio)
+        catMapeado.push({
+          tipo:'variacao',
+          cod: m.cod,
+          nome: (m.nome||p.nome)+(m.diferenca?(' - '+m.diferenca):'')+statusTag,
+          preco: m.preco!=null && m.preco!=='' ? parseFloat(m.preco) : parseFloat(p.preco),
+          img: m.data||p.img||'',
+          desc: p.descricao||''
+        });
+      });
     });
     var inspMapeado = (insp||[]).map(function(p){
       return { tipo:'inspiracao', cod: p.cod||'', nome: '✨ Inspiração #'+(p.cod||''), preco: 0, img: p.img||'', desc: p.descricao||'' };
