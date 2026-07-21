@@ -441,6 +441,7 @@ async function sbProximoNum(){
     <button class="btn btng" onclick="copiarWpp()">📱 Copiar resumo pro WhatsApp</button>
     <button class="btn btnd" onclick="resetar()">🔄 Resetar</button>
     <button class="btn" onclick="gt('ent')">← Entregador</button>
+    <button class="btn" style="background:#7BAE8E;color:#fff;border-color:#7BAE8E" onclick="enviarParaClientes()">🌿 Enviar para Clientes</button>
     <span style="font-size:12px;color:#1a7a3c" id="auto-saved-msg"></span>
   </div>
 
@@ -1300,6 +1301,94 @@ render();
     }catch(e2){}
   }
 })();
+
+/* ======= INTEGRAÇÃO COM APP DE CLIENTES ======= */
+var FB_URL='https://firestore.googleapis.com/v1/projects/confeitos-clientes/databases/(default)/documents';
+var FB_KEY='AIzaSyBbZqLD7Ht6J-48LavV_IO9rKsIieJczlU';
+
+async function buscarClientePorWhats(whats){
+  var digits=whats.replace(/\D/g,'');
+  if(!digits)return null;
+  var url=FB_URL+'/clientes?key='+FB_KEY;
+  try{
+    var res=await fetch(url);
+    var data=await res.json();
+    if(!data.documents)return null;
+    return data.documents.find(function(doc){
+      var w=(doc.fields&&doc.fields.whats&&doc.fields.whats.stringValue)||'';
+      return w.replace(/\D/g,'').includes(digits)||digits.includes(w.replace(/\D/g,'').slice(-8));
+    });
+  }catch(e){return null;}
+}
+
+async function salvarPedidoClientes(cliId,pedidoData){
+  var url=FB_URL+'/clientes/'+cliId+'/pedidos?key='+FB_KEY;
+  await fetch(url,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({fields:{
+      produto:{stringValue:pedidoData.produto},
+      valor:{doubleValue:pedidoData.valor},
+      entrega:{doubleValue:pedidoData.entrega},
+      data:{stringValue:pedidoData.data},
+      dataConfirmacao:{stringValue:pedidoData.data},
+      status:{stringValue:'finalizado-ok'},
+      destNome:{stringValue:pedidoData.destNome},
+      destTel:{stringValue:pedidoData.destTel},
+      destEnd:{stringValue:pedidoData.destEnd},
+      destBairro:{stringValue:pedidoData.destBairro},
+      obs:{stringValue:pedidoData.obs},
+      criado:{stringValue:new Date().toISOString()},
+      atualizado:{stringValue:new Date().toISOString()}
+    }})
+  });
+}
+
+async function enviarParaClientes(){
+  var whats=gv('ctel');
+  var nome=gv('cnome');
+  if(!whats&&!nome){alert('Preencha o nome ou WhatsApp do cliente primeiro.');return;}
+
+  var sub=ITS.reduce(function(s,it){return s+it.q*it.u;},0);
+  var taxa=parseFloat(gv('taxa'))||0,dsc=parseFloat(gv('desc'))||0;
+  var tot=Math.max(0,sub-dsc+taxa);
+  var produtos=ITS.map(function(it){return(it.q>1?it.q+'x ':'')+it.n;}).join(', ');
+
+  var pedData={
+    produto:produtos||'Pedido',
+    valor:tot,
+    entrega:taxa,
+    data:gv('dped')||new Date().toISOString().split('T')[0],
+    destNome:gv('e-recebe')||gv('presenteado')||'',
+    destTel:gv('e-wpp')||'',
+    destEnd:gv('e-end')||'',
+    destBairro:gv('e-bairro')||'',
+    obs:gv('obs')||''
+  };
+
+  // Busca cliente
+  var doc=await buscarClientePorWhats(whats);
+
+  if(doc){
+    var cliNome=(doc.fields&&doc.fields.nome&&doc.fields.nome.stringValue)||nome;
+    var cliId=doc.name.split('/').pop();
+    var confirmMsg='✅ Cliente encontrado: '+cliNome+'\n\nDeseja lançar este pedido no histórico dele?\n\nProduto: '+pedData.produto+'\nTotal: R$ '+tot.toFixed(2).replace('.',',')+'\nData: '+pedData.data;
+    if(confirm(confirmMsg)){
+      try{
+        await salvarPedidoClientes(cliId,pedData);
+        alert('✅ Pedido lançado com sucesso no app de clientes!');
+      }catch(e){
+        alert('❌ Erro ao salvar: '+e.message);
+      }
+    }
+  }else{
+    // Cliente não encontrado — ofere abrir o app de clientes
+    var msg='❓ Nenhum cliente encontrado com o WhatsApp: '+whats+'\n\nDeseja abrir o app de clientes para cadastrar '+nome+'?';
+    if(confirm(msg)){
+      window.open('https://confeitos-manu.github.io/Clientes/','_blank');
+    }
+  }
+}
 </script>
 </body>
 </html>
