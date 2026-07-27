@@ -1306,6 +1306,69 @@ render();
 var FB_URL='https://firestore.googleapis.com/v1/projects/confeitos-clientes/databases/(default)/documents';
 var FB_KEY='AIzaSyBbZqLD7Ht6J-48LavV_IO9rKsIieJczlU';
 
+/* ======= INTEGRAÇÃO COM O SITE DE PRECIFICAÇÃO (registra vendas) =======
+   Usa o mesmo Supabase (SB_URL/SB_KEY) que já carrega o catálogo aqui em
+   cima — não precisa de chave nova nenhuma. */
+function precifPrimeiroDiaMesISO(){
+  var d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-01';
+}
+
+async function precifCalcularCustoProduto(nomeProduto){
+  var produtos = await sbFetch('/rest/v1/produtos?ativo=eq.true&nome=ilike.'+encodeURIComponent(nomeProduto)+'&select=*');
+  if(!produtos || !produtos.length) return null;
+  var produto = produtos[0];
+  var insumos = await sbFetch('/rest/v1/insumos?select=*');
+  var custosArr = await sbFetch('/rest/v1/custos_fixos?id=eq.1&select=*');
+  var perdas = await sbFetch('/rest/v1/perdas?data=gte.'+precifPrimeiroDiaMesISO()+'&select=valor');
+  var custos = custosArr && custosArr[0];
+  if(!custos) return null;
+  var perdasMes = (perdas||[]).reduce(function(s,p){return s+(p.valor||0);},0);
+  var totalFixos = custos.aluguel+custos.energia+custos.agua+custos.internet+custos.funcionarios+custos.sistemas+custos.outros+perdasMes;
+  var minutosMes = (custos.horas_dia||0)*(custos.dias_semana||0)*4.33*60;
+  var rateioLoja = minutosMes>0 ? (totalFixos/minutosMes)*(produto.minutos_producao||0) : 0;
+  var custoMaoDeObra = minutosMes>0 ? ((custos.salario_mensal||0)/minutosMes)*(produto.minutos_producao||0) : 0;
+  var custoMateriais = (produto.materiais||[]).reduce(function(s,m){
+    if(m.fixo && m.insumo_id){
+      var ins = (insumos||[]).find(function(i){return i.id===m.insumo_id;});
+      var preco = ins ? ins.preco : m.valor_unitario;
+      return s + preco*(m.quantidade||0);
+    }
+    return s + (m.fixo ? m.valor_unitario*(m.quantidade||0) : (m.valor_unitario||0));
+  }, 0);
+  return { produtoId: produto.id, custoTotal: custoMateriais + custoMaoDeObra + rateioLoja };
+}
+
+async function precifRegistrarVenda(nomeProduto, quantidade, precoUnitario, dataISO){
+  if(!nomeProduto || !(precoUnitario>0)) return;
+  try{
+    var match = await precifCalcularCustoProduto(nomeProduto);
+    var custoUnitario = match ? match.custoTotal : 0;
+    var margemUnit = precoUnitario - custoUnitario;
+    await sbFetch('/rest/v1/vendas', {
+      method:'POST',
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body: JSON.stringify({
+        data: dataISO || new Date().toISOString().slice(0,10),
+        produto_id: match ? match.produtoId : null,
+        produto_nome: nomeProduto,
+        quantidade: quantidade||1,
+        preco_unitario: precoUnitario,
+        custo_unitario: custoUnitario,
+        margem_contribuicao_unitaria: margemUnit,
+        margem_contribuicao_total: margemUnit*(quantidade||1)
+      })
+    });
+  }catch(e){ console.error('Precificação: falha ao registrar venda', e); }
+}
+
+async function precifRegistrarVendasDoPedido(itens, dataISO){
+  for(var i=0;i<(itens||[]).length;i++){
+    var it = itens[i];
+    await precifRegistrarVenda(it.n, it.q, it.u, dataISO);
+  }
+}
+
 async function buscarClientePorWhats(whats){
   var digits=whats.replace(/\D/g,'');
   if(!digits)return null;
@@ -1376,6 +1439,7 @@ async function enviarParaClientes(){
     if(confirm(confirmMsg)){
       try{
         await salvarPedidoClientes(cliId,pedData);
+        precifRegistrarVendasDoPedido(ITS, pedData.data); // manda as vendas pra Precificação, sem travar a tela
         alert('✅ Pedido lançado com sucesso no app de clientes!');
       }catch(e){
         alert('❌ Erro ao salvar: '+e.message);
