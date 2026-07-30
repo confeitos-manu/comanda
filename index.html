@@ -32,12 +32,12 @@ body{
   font-size:14px;color:var(--ink);background:var(--bg);
   -webkit-font-smoothing:antialiased;
 }
-.app{max-width:900px;margin:0 auto;padding:18px}
+.app{max-width:900px;margin:0 auto;padding:14px}
 
 /* ---------- NAVEGAÇÃO ---------- */
 .nav{
   display:flex;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
-  padding:5px;gap:4px;margin-bottom:16px;flex-wrap:wrap;box-shadow:var(--shadow);
+  padding:4px;gap:3px;margin-bottom:12px;flex-wrap:wrap;box-shadow:var(--shadow);
 }
 .ntab{
   flex:1;min-width:76px;padding:9px 6px;font-size:11.5px;font-weight:600;cursor:pointer;
@@ -52,19 +52,19 @@ body{
 /* ---------- CARDS DE FORMULÁRIO ---------- */
 .fc{
   background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
-  padding:16px 18px;margin-bottom:12px;box-shadow:var(--shadow);
+  padding:12px 16px;margin-bottom:9px;box-shadow:var(--shadow);
 }
 .ft{
   font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
-  color:var(--rose-dark);margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:7px;
+  color:var(--rose-dark);margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:5px;
 }
-.r2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
-.r3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px}
-.rf{margin-bottom:10px}
-.fl{font-size:11px;color:var(--muted);display:block;margin-bottom:4px;font-weight:600}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.r3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px}
+.rf{margin-bottom:8px}
+.fl{font-size:11px;color:var(--muted);display:block;margin-bottom:3px;font-weight:600}
 
 input[type=text],input[type=tel],input[type=date],input[type=time],input[type=number],select,textarea{
-  width:100%;font-size:13.5px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;
+  width:100%;font-size:13.5px;padding:7px 9px;border:1px solid var(--border);border-radius:8px;
   background:#fff;color:var(--ink);outline:none;font-family:inherit;
   transition:border-color .15s;
 }
@@ -110,7 +110,7 @@ input[readonly]{background:#faf6f3;color:var(--muted);cursor:default}
 }
 
 /* ---------- BOTÕES ---------- */
-.acts{display:flex;gap:9px;flex-wrap:wrap;margin-top:10px;align-items:center}
+.acts{display:flex;gap:9px;flex-wrap:wrap;margin-top:6px;align-items:center}
 .btn{
   padding:9px 17px;border-radius:9px;border:1px solid var(--border);background:#fff;
   cursor:pointer;font-size:13px;color:var(--ink);font-family:inherit;font-weight:600;
@@ -194,6 +194,11 @@ input[readonly]{background:#faf6f3;color:var(--muted);cursor:default}
 .checklist-box .ctit{font-weight:900;font-size:12.5px;text-transform:uppercase;margin-bottom:6px;text-align:center;border-bottom:1px solid #000;padding-bottom:5px}
 .checklist-box .citem{display:flex;align-items:center;gap:6px;padding:3px 0;line-height:1.4}
 .cbox{width:13px;height:13px;border:1.5px solid #000;flex-shrink:0;display:inline-block}
+.controle-saida{break-inside:avoid;page-break-inside:avoid}
+.aviso-contato{
+  font-size:12px;font-weight:700;color:#000;background:#f2f2f2;border:1.5px solid #000;
+  border-radius:5px;padding:4px 9px;display:inline-block;white-space:nowrap;
+}
 
 .vdeliv{padding:12px 16px;font-size:14px;line-height:2.6;color:#000}
 .vdeliv-campo{margin-bottom:6px;font-size:14px;font-weight:700}
@@ -377,6 +382,7 @@ async function obterProximoNumeroDaNuvem(){
       <div><label class="fl">Horário até às</label><input id="hor-fim" type="time"/></div>
     </div>
     <div class="rf"><label class="fl">Nº do pedido</label><input id="nped" type="text" readonly/></div>
+    <div class="rf"><label class="fl">Valor da entrega (R$)</label><input id="taxa-rapida" type="number" min="0" step="0.01" placeholder="0,00" oninput="sincronizarTaxaEntrega('rapido')"/></div>
   </div>
   <div class="acts">
     <button class="btn btnp" onclick="irParaAba('it')">Próximo: Itens →</button>
@@ -408,7 +414,7 @@ async function obterProximoNumeroDaNuvem(){
     <div class="ft">Pagamento</div>
     <div class="mets">
       <div class="met"><div class="ml">Subtotal</div><div class="mv" id="subv">R$ 0,00</div></div>
-      <div class="met"><div class="ml">Taxa entrega (R$)</div><div class="mv"><input id="taxa" type="number" min="0" step="0.01" value="0" oninput="calcularTotais()"/></div></div>
+      <div class="met"><div class="ml">Taxa entrega (R$)</div><div class="mv"><input id="taxa" type="number" min="0" step="0.01" value="0" oninput="sincronizarTaxaEntrega('taxa')"/></div></div>
       <div class="met"><div class="ml">Desconto (R$)</div><div class="mv"><input id="desc" type="number" min="0" step="0.01" value="0" oninput="calcularTotais()"/></div></div>
       <div class="met"><div class="ml">Total geral</div><div class="mv" id="totv" style="color:var(--green)">R$ 0,00</div></div>
     </div>
@@ -769,6 +775,17 @@ function atualizarUITroco(){
 function selecionarTroco(valor){ trocoOpcao = valor; atualizarUITroco(); }
 
 /* =====================================================================
+   VALOR DA ENTREGA: campo rápido na aba Pedido, espelhado com a
+   Taxa de entrega da aba Pagamento (os dois sempre em sincronia)
+===================================================================== */
+function sincronizarTaxaEntrega(origem){
+  var valor = origem === 'rapido' ? valorCampo('taxa-rapida') : valorCampo('taxa');
+  var campoRapido = document.getElementById('taxa-rapida'); if(campoRapido) campoRapido.value = valor;
+  var campoTaxa = document.getElementById('taxa'); if(campoTaxa) campoTaxa.value = valor;
+  calcularTotais();
+}
+
+/* =====================================================================
    MODAL: CATÁLOGO DE PRODUTOS
    O catálogo é somente leitura aqui — quem cadastra produtos é o
    app Catálogo (confeitosdamanu.vercel.app). A comanda só consome.
@@ -884,7 +901,7 @@ function restaurarEstado(s){
   atualizarVisibilidadeEntregador();
   setValor('hor-ini', s.hor_ini); setValor('hor-fim', s.hor_fim); setValor('nped', s.nped);
   setValor('obs', s.obs);
-  setValor('taxa', s.taxa); setValor('desc', s.desc); setValor('pago', s.pago);
+  setValor('taxa', s.taxa); setValor('taxa-rapida', s.taxa); setValor('desc', s.desc); setValor('pago', s.pago);
   var cpgtoEl = document.getElementById('cpgto'); if(cpgtoEl) cpgtoEl.value = s.cpgto || '';
   trocoOpcao = s.troco || ''; setValor('troco-val', s.troco_val); atualizarUITroco();
   setValor('e-recebe', s.e_recebe); setValor('e-wpp', s.e_wpp); setValor('e-end', s.e_end);
@@ -1009,7 +1026,7 @@ function resetarComanda(){
   if(!confirm('Limpar toda a comanda e começar novo pedido?')) return;
   itensPedido = []; trocoOpcao = '';
   ['cnome', 'ctel', 'vai-cartao', 'id-cartao', 'remetente', 'presenteado',
-   'hor-ini', 'hor-fim', 'taxa', 'desc', 'pago', 'troco-val',
+   'hor-ini', 'hor-fim', 'taxa', 'taxa-rapida', 'desc', 'pago', 'troco-val',
    'e-recebe', 'e-wpp', 'e-end', 'e-bairro', 'e-comp', 'e-obs', 'obs']
   .forEach(function(id){ var el = document.getElementById(id); if(el) el.value = ''; });
   ['cpgto', 'tipo-ent', 'e-status', 'e-pgto'].forEach(function(id){
@@ -1162,7 +1179,7 @@ function montarFolhaDaComanda(){
   /* Célula de falta pagar */
   var celulaFalta = tudoPago
     ? '<div class="tudo-pago-box">✓ TUDO PAGO</div>'
-    : '<span style="font-size:9px;font-weight:700;line-height:1.5">FALTA PAGAR<br>PIX ' + marcado('Pix', formaPagamento) + ' DIN ' + marcado('Dinheiro', formaPagamento) + ' CART ' + marcado('Cartão', formaPagamento) + trocoHtml + '</span>';
+    : '<span style="font-size:9px;font-weight:700;line-height:1.5">FALTA PAGAR<br>' + (formaPagamento ? formaPagamento.toUpperCase() : '_______') + trocoHtml + '</span>';
   var valorFalta = tudoPago ? '' : '<span style="font-size:13px;font-weight:900;color:#c40000">' + formatarValor(faltaPagar) + '</span>';
 
   /* Fotos dos itens */
@@ -1241,7 +1258,7 @@ function montarFolhaDaComanda(){
     var linhaCobranca = tudoPago
       ? '<div style="font-size:16px;font-weight:900;background:#000;color:#fff;padding:6px 12px;display:inline-block;margin-top:4px">✓ TUDO PAGO</div>'
       : '<div style="margin-top:4px">COBRAR: <span style="font-size:18px;font-weight:900;color:#c40000">R$ ' + formatarValor(faltaPagar) + '</span><br>'
-        + '<span style="font-size:12px;font-weight:700">CARTÃO ' + marcado('Cartão', formaPagamento) + ' &nbsp; PIX ' + marcado('Pix', formaPagamento) + ' &nbsp; DINHEIRO ' + marcado('Dinheiro', formaPagamento) + '</span>'
+        + '<span style="font-size:12px;font-weight:700">Forma: ' + (formaPagamento ? formaPagamento.toUpperCase() : 'A definir') + '</span>'
         + (trocoOpcao === 'sim' && valorCampo('troco-val') ? '<br><span style="font-size:12px">Troco para R$ ' + formatarValor(parseFloat(valorCampo('troco-val'))) + '</span>' : '')
         + (trocoOpcao === 'perguntar' ? '<br><span style="font-size:12px">Perguntar sobre troco</span>' : '')
       + '</div>';
@@ -1262,15 +1279,17 @@ function montarFolhaDaComanda(){
             + '<div style="text-align:right"><span style="font-size:10px;color:#555;text-transform:uppercase;font-weight:700">Horário</span><br>'
               + '<span style="font-size:14px;font-weight:900">' + horario + '</span></div>'
           + '</div>'
-          + '<div class="vdeliv-campo">RECEBE: <span class="vdeliv-linha">' + (valorCampo('e-recebe') || '') + '</span>'
-            + ' &nbsp; WhatsApp: <span class="vdeliv-linha-sm">' + (valorCampo('e-wpp') || '') + '</span></div>'
-          + '<div style="font-size:12px;font-weight:700;color:#c40000;background:#fff3f0;border:1px solid #c40000;border-radius:5px;padding:5px 9px;display:inline-block;margin-bottom:8px">⚠️ Entrar em contato só se extremamente necessário</div>'
+          + '<div class="vdeliv-campo" style="display:flex;align-items:center;flex-wrap:wrap;gap:12px">'
+            + '<span>RECEBE: <span class="vdeliv-linha">' + (valorCampo('e-recebe') || '') + '</span></span>'
+            + '<span>WhatsApp: <span class="vdeliv-linha-sm">' + (valorCampo('e-wpp') || '') + '</span></span>'
+            + '<span class="aviso-contato">⚠️ Contato só se extremamente necessário</span>'
+          + '</div>'
           + '<div class="vdeliv-campo">ENDEREÇO: <span class="vdeliv-linha">' + (valorCampo('e-end') || '') + '</span>'
             + ' BAIRRO: <span class="vdeliv-linha-sm">' + (valorCampo('e-bairro') || '') + '</span></div>'
           + (valorCampo('e-comp') ? '<div class="vdeliv-campo">COMPL.: <span class="vdeliv-linha">' + valorCampo('e-comp') + '</span></div>' : '')
           + (valorCampo('e-obs') ? '<div class="vdeliv-campo">OBS.: <span class="vdeliv-linha">' + valorCampo('e-obs') + '</span></div>' : '')
           + '<br>' + linhaCobranca
-          + '<div style="margin-top:10px;border-top:1.5px dashed #000;padding-top:8px">'
+          + '<div class="controle-saida" style="margin-top:10px;border-top:1.5px dashed #000;padding-top:8px">'
             + '<div style="font-size:11px;font-weight:900;text-transform:uppercase;border-bottom:1.5px solid #000;padding-bottom:3px;margin-bottom:6px;letter-spacing:.05em">🏷 CONTROLE DE SAÍDA</div>'
             + '<span style="font-size:11px;font-weight:700">PEDIDO Nº: <b style="font-size:13px">' + numeroPedido + '</b></span><br>'
             + '<span style="font-size:11px;font-weight:700">RECEBE: <span style="border-bottom:1px solid #000;display:inline-block;min-width:160px;font-size:12px">' + (valorCampo('e-recebe') || '') + '</span></span><br>'
@@ -1429,15 +1448,20 @@ function renderizarPendentesClientes(){
 async function buscarClientePorWhatsApp(whats){
   var digitos = whats.replace(/\D/g, '');
   if(!digitos) return null;
-  var url = FIREBASE_URL + '/clientes?key=' + FIREBASE_KEY;
   try{
-    var res = await fetch(url);
-    var dados = await res.json();
-    if(!dados.documents) return null;
-    return dados.documents.find(function(doc){
-      var w = (doc.fields && doc.fields.whats && doc.fields.whats.stringValue) || '';
-      return w.replace(/\D/g, '').includes(digitos) || digitos.includes(w.replace(/\D/g, '').slice(-8));
-    });
+    var pageToken = null;
+    do{
+      var url = FIREBASE_URL + '/clientes?key=' + FIREBASE_KEY + '&pageSize=300' + (pageToken ? '&pageToken=' + encodeURIComponent(pageToken) : '');
+      var res = await fetch(url);
+      var dados = await res.json();
+      var encontrado = (dados.documents || []).find(function(doc){
+        var w = (doc.fields && doc.fields.whats && doc.fields.whats.stringValue) || '';
+        return w.replace(/\D/g, '').includes(digitos) || digitos.includes(w.replace(/\D/g, '').slice(-8));
+      });
+      if(encontrado) return encontrado;
+      pageToken = dados.nextPageToken || null;
+    } while(pageToken);
+    return null;
   }catch(e){ return null; }
 }
 
