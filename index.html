@@ -449,12 +449,6 @@ async function obterProximoNumeroDaNuvem(){
 <div id="pgto-pnl" class="pnl no-print">
   <div class="fc">
     <div class="ft">Pagamento</div>
-    <div class="mets">
-      <div class="met"><div class="ml">Subtotal</div><div class="mv" id="subv">R$ 0,00</div></div>
-      <div class="met"><div class="ml">Taxa entrega (R$)</div><div class="mv"><input id="taxa" type="number" min="0" step="0.01" value="0" oninput="sincronizarTaxaEntrega('taxa')"/></div></div>
-      <div class="met"><div class="ml">Desconto (R$)</div><div class="mv"><input id="desc" type="number" min="0" step="0.01" value="0" oninput="calcularTotais()"/></div></div>
-      <div class="met"><div class="ml">Total geral</div><div class="mv" id="totv" style="color:var(--green)">R$ 0,00</div></div>
-    </div>
     <div class="r2">
       <div><label class="fl">Sinal pago (R$)</label><input id="pago" type="number" min="0" step="0.01" value="0" oninput="calcularTotais()"/></div>
       <div>
@@ -466,6 +460,12 @@ async function obterProximoNumeroDaNuvem(){
           <option>Cartão</option>
         </select>
       </div>
+    </div>
+    <div class="mets">
+      <div class="met"><div class="ml">Subtotal</div><div class="mv" id="subv">R$ 0,00</div></div>
+      <div class="met"><div class="ml">Taxa entrega (R$)</div><div class="mv"><input id="taxa" type="number" min="0" step="0.01" value="0" oninput="sincronizarTaxaEntrega('taxa')"/></div></div>
+      <div class="met"><div class="ml">Desconto (R$)</div><div class="mv"><input id="desc" type="number" min="0" step="0.01" value="0" oninput="calcularTotais()"/></div></div>
+      <div class="met"><div class="ml">Total geral</div><div class="mv" id="totv" style="color:var(--green)">R$ 0,00</div></div>
     </div>
     <div id="troco-box" style="display:none" class="rf">
       <label class="fl">Precisa de troco?</label>
@@ -574,7 +574,12 @@ async function obterProximoNumeroDaNuvem(){
   <div class="fc">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:9px;margin-bottom:12px">
       <div class="ft" style="margin:0;border:none;padding:0">Histórico de pedidos</div>
-      <div style="display:flex;gap:7px;flex-wrap:wrap">
+      <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center">
+        <select id="hist-ordenar" onchange="renderizarHistorico()" style="font-size:12px;padding:6px 9px;width:auto">
+          <option value="recente">Mais recente primeiro</option>
+          <option value="data-asc">Data de entrega ↑ (mais próxima primeiro)</option>
+          <option value="data-desc">Data de entrega ↓ (mais distante primeiro)</option>
+        </select>
         <button class="btn" style="font-size:11px;padding:6px 11px" onclick="exportarHistoricoCSV()">⬇ Exportar CSV</button>
         <button class="btn btnd" style="font-size:11px;padding:6px 11px" onclick="limparHistorico()">🗑 Limpar tudo</button>
       </div>
@@ -1059,9 +1064,13 @@ function renderizarHistorico(){
   var container = document.getElementById('hist-lista');
   if(!container) return;
   if(!historico.length){ container.innerHTML = '<div class="hist-empty">Nenhum pedido salvo ainda.</div>'; return; }
+  var modo = valorCampo('hist-ordenar') || 'recente';
+  var lista = historico.slice();
+  if(modo === 'data-asc') lista.sort(function(a, b){ return (a.data || '').localeCompare(b.data || ''); });
+  else if(modo === 'data-desc') lista.sort(function(a, b){ return (b.data || '').localeCompare(a.data || ''); });
   container.innerHTML =
     '<div class="hist-hdr"><span>Nº</span><span>Cliente</span><span>Data</span><span>Total</span><span>Ações</span></div>'
-    + historico.map(function(p){
+    + lista.map(function(p){
       var dataFormatada = p.data ? p.data.split('-').reverse().join('/') : '—';
       var totalFormatado = 'R$ ' + (p.total || 0).toFixed(2).replace('.', ',');
       var situacaoFalta = p.falta > 0
