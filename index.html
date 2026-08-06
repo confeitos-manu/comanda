@@ -52,14 +52,16 @@ body{
 /* ---------- CARDS DE FORMULÁRIO ---------- */
 .fc{
   background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
-  padding:12px 16px;margin-bottom:9px;box-shadow:var(--shadow);
+  padding:12px 16px;margin-bottom:9px;box-shadow:var(--shadow);transition:box-shadow .15s;
 }
 .ft{
-  font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+  font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
   color:var(--rose-dark);margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:5px;
+  display:flex;align-items:center;gap:6px;
 }
 .r2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
 .r3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px}
+.r4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:8px}
 .rf{margin-bottom:8px}
 .fl{font-size:11px;color:var(--muted);display:block;margin-bottom:3px;font-weight:600}
 
@@ -68,7 +70,7 @@ input[type=text],input[type=tel],input[type=date],input[type=time],input[type=nu
   background:#fff;color:var(--ink);outline:none;font-family:inherit;
   transition:border-color .15s;
 }
-input:focus,select:focus,textarea:focus{border-color:var(--rose)}
+input:focus,select:focus,textarea:focus{border-color:var(--rose);box-shadow:0 0 0 3px rgba(185,99,111,.12)}
 textarea{resize:vertical;min-height:52px}
 input[readonly]{background:#faf6f3;color:var(--muted);cursor:default}
 
@@ -83,7 +85,7 @@ input[readonly]{background:#faf6f3;color:var(--muted);cursor:default}
 .thb img{width:100%;height:100%;object-fit:cover}
 .thb .cam{font-size:18px;opacity:.4}
 .thb .badge{position:absolute;bottom:1px;right:1px;background:var(--ink);color:#fff;font-size:8px;border-radius:3px;padding:1px 3px}
-.thb .codebadge{position:absolute;top:1px;left:1px;background:rgba(0,0,0,.65);color:#fff;font-size:7px;border-radius:3px;padding:1px 3px;font-weight:700}
+.cod-caption{font-size:9.5px;color:var(--muted);font-weight:700;text-align:center}
 .dbtn{
   width:27px;height:27px;border-radius:7px;border:1px solid var(--border);background:transparent;
   cursor:pointer;color:#c1a9a3;font-size:16px;display:flex;align-items:center;justify-content:center;
@@ -97,6 +99,8 @@ input[readonly]{background:#faf6f3;color:var(--muted);cursor:default}
   display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--muted);
   padding:4px 8px;background:#faf6f3;border-radius:6px;margin-bottom:4px;max-width:420px;
 }
+.quick-add-manual{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-top:10px;padding:10px;background:#faf6f3;border-radius:9px}
+.adicional-form{background:#fff;border:1px solid var(--border);border-radius:8px;padding:9px;margin-bottom:8px;display:grid;grid-template-columns:1fr 56px 90px 80px auto;gap:6px;align-items:end;max-width:560px}
 
 /* ---------- TOTAIS / PAGAMENTO ---------- */
 .mets{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:12px}
@@ -138,6 +142,14 @@ input[readonly]{background:#faf6f3;color:var(--muted);cursor:default}
 .wpp-header-title{font-size:15px;font-weight:800;color:var(--ink);display:flex;align-items:center;gap:8px}
 .wpp-header-sub{font-size:12px;color:var(--muted);margin-top:3px}
 .btn-wpp-lg{font-size:14px;padding:12px 22px;white-space:nowrap;flex-shrink:0}
+
+/* ---------- CABEÇALHO DO Nº DO PEDIDO (fica visível em qualquer aba) ---------- */
+.pedido-header{
+  display:flex;align-items:center;gap:9px;margin-bottom:10px;padding:8px 15px;
+  background:var(--rose);color:#fff;border-radius:10px;box-shadow:var(--shadow);width:fit-content;
+}
+.pedido-header-label{opacity:.85;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.pedido-header-num{font-size:16px;font-weight:800}
 
 /* ---------- CATÁLOGO (grid de produtos) ---------- */
 .cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:11px}
@@ -242,12 +254,21 @@ input[readonly]{background:#faf6f3;color:var(--muted);cursor:default}
   .app{padding:0;max-width:100%}
   .nav,.acts,.no-print{display:none!important}
   #prev-pnl{display:block!important}
-  .via{font-size:11.5px}
-  .vtable td{height:24px;padding:4px 6px}
-  .vdeliv{font-size:13px;line-height:2.4;padding:10px 14px}
+  .via{font-size:10.5px}
+  .vh{padding:4px 7px}
+  .vh-l,.vh-r{line-height:1.4}
+  .vtable td{height:18px;padding:2px 5px}
+  .checklist-box{padding:5px 6px;margin-top:4px}
+  .checklist-box .citem{padding:1px 0}
+  .vdeliv{font-size:11px;line-height:1.85;padding:6px 10px}
+  .vdeliv-campo{margin-bottom:3px}
+  .vfotos{padding:4px 7px}
+  .vfotos-grid{grid-template-columns:repeat(auto-fill,minmax(65px,1fr));gap:4px}
+  .controle-saida{margin-top:5px!important;padding-top:4px!important}
+  .aviso-contato{padding:2px 6px;font-size:10.5px}
 }
 @media(max-width:600px){
-  .r2,.r3{grid-template-columns:1fr}
+  .r2,.r3,.r4{grid-template-columns:1fr}
   .irow{grid-template-columns:44px 1fr 44px 70px 66px 24px;gap:3px}
   .mets{grid-template-columns:1fr 1fr}
   .hist-hdr,.hist-row{grid-template-columns:40px 1fr 80px auto}
@@ -326,6 +347,12 @@ async function obterProximoNumeroDaNuvem(){
 <body>
 <div class="app">
 
+<!-- CABEÇALHO: número do pedido, sempre visível -->
+<div class="pedido-header no-print">
+  <span class="pedido-header-label">Pedido</span>
+  <span class="pedido-header-num" id="nped-topo">—</span>
+</div>
+
 <!-- NAV: Pedido → Itens → Pagamento → Entregador → Comanda → Histórico -->
 <div class="nav no-print">
   <button class="ntab on" onclick="irParaAba('ped')">1. Pedido</button>
@@ -366,7 +393,7 @@ async function obterProximoNumeroDaNuvem(){
   </div>
   <div class="fc">
     <div class="ft">Data, horário e tipo</div>
-    <div class="r3">
+    <div class="r4">
       <div><label class="fl">Data de entrega</label><input id="dped" type="date" oninput="atualizarDiaSemana()"/></div>
       <div><label class="fl">Dia da semana</label><input id="diasem" type="text" readonly/></div>
       <div>
@@ -376,13 +403,17 @@ async function obterProximoNumeroDaNuvem(){
           <option value="RETIRADA">Retirada</option>
         </select>
       </div>
+      <div><label class="fl">Valor da entrega (R$)</label><input id="taxa-rapida" type="number" min="0" step="0.01" placeholder="0,00" oninput="sincronizarTaxaEntrega('rapido')"/></div>
     </div>
-    <div class="r2">
-      <div><label class="fl">Horário início</label><input id="hor-ini" type="time"/></div>
-      <div><label class="fl">Horário até às</label><input id="hor-fim" type="time"/></div>
+    <div class="rf">
+      <label class="fl">Horário</label>
+      <div style="display:flex;align-items:center;gap:8px">
+        <input id="hor-ini" type="time" style="max-width:130px"/>
+        <span style="font-size:12px;color:var(--muted);flex-shrink:0">até</span>
+        <input id="hor-fim" type="time" style="max-width:130px"/>
+      </div>
     </div>
-    <div class="rf"><label class="fl">Nº do pedido</label><input id="nped" type="text" readonly/></div>
-    <div class="rf"><label class="fl">Valor da entrega (R$)</label><input id="taxa-rapida" type="number" min="0" step="0.01" placeholder="0,00" oninput="sincronizarTaxaEntrega('rapido')"/></div>
+    <input id="nped" type="hidden"/>
   </div>
   <div class="acts">
     <button class="btn btnp" onclick="irParaAba('it')">Próximo: Itens →</button>
@@ -397,7 +428,13 @@ async function obterProximoNumeroDaNuvem(){
       <span>Foto</span><span>Produto</span><span>Qtd</span><span>Unit. R$</span><span>Total</span><span></span>
     </div>
     <div id="lista"></div>
-    <button class="btn btnp" style="margin-top:10px" onclick="abrirModalCatalogo()">+ Adicionar item</button>
+    <div class="quick-add-manual">
+      <div style="flex:2;min-width:150px"><label class="fl">Produto (adicionar manual)</label><input id="rapido-nome" type="text" placeholder="Nome do produto"/></div>
+      <div style="width:64px"><label class="fl">Qtd</label><input id="rapido-qtd" type="number" value="1" min="1"/></div>
+      <div style="width:96px"><label class="fl">Valor unit. (R$)</label><input id="rapido-preco" type="number" value="0" min="0" step="0.01"/></div>
+      <button class="btn btnp" onclick="adicionarItemManualRapido()">+ Adicionar</button>
+    </div>
+    <button class="btn" style="margin-top:9px" onclick="abrirModalCatalogo()">📦 Escolher do catálogo</button>
   </div>
   <div class="fc">
     <div class="ft">OBS. para a loja</div>
@@ -469,12 +506,12 @@ async function obterProximoNumeroDaNuvem(){
     <div class="r2">
       <div>
         <label class="fl">Status do pagamento na entrega</label>
-        <select id="e-status">
+        <select id="e-status" onchange="atualizarVisibilidadeFormaPagamentoEntrega()">
           <option value="cobrar">Cobrar restante</option>
           <option value="pago">Tudo pago</option>
         </select>
       </div>
-      <div>
+      <div id="e-pgto-wrapper">
         <label class="fl">Forma de pagamento do restante</label>
         <select id="e-pgto">
           <option value="">Selecione...</option>
@@ -584,6 +621,7 @@ var catalogo = [];           // produtos carregados do Supabase (Catálogo)
 var historico = [];          // pedidos já salvos
 var trocoOpcao = '';         // 'sim' | 'nao' | 'perguntar'
 var pendentesClientes = [];  // fila de pedidos aguardando lançamento no app de Clientes
+var formularioAdicionalAberto = null; // índice do item com o mini-formulário de adicional aberto
 var DIAS_DA_SEMANA = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
 
 /* =====================================================================
@@ -602,6 +640,10 @@ function irParaAba(aba){
 ===================================================================== */
 function valorCampo(id){ return (document.getElementById(id) || {}).value || ''; }
 function campoMarcado(id){ var el = document.getElementById(id); return !!(el && el.checked); }
+function definirNumeroPedido(num){
+  var campo = document.getElementById('nped'); if(campo) campo.value = num || '';
+  var topo = document.getElementById('nped-topo'); if(topo) topo.textContent = num || '—';
+}
 function escapeHTML(s){ return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
 function formatarMoeda(v){ return 'R$ ' + (v || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
 function formatarValor(v){ return (v || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
@@ -612,6 +654,7 @@ function formatarDataBR(d){
 }
 function marcado(opcao, valorAtual){ return valorAtual === opcao ? '[X]' : '[ ]'; }
 function totalAdicionaisDoItem(item){ return (item.adicionais || []).reduce(function(s, ad){ return s + (ad.valor || 0); }, 0); }
+function descricaoAdicional(ad){ return (ad.qtd && ad.qtd > 1 ? ad.qtd + 'x ' : '') + ad.nome; }
 function descreverItemNatural(item){
   var desc = item.n;
   if(item.tipoFlor === 'natural') desc += ' com ' + (item.corFlor ? item.corFlor.toLowerCase() + ' natural' : 'flor natural');
@@ -634,6 +677,12 @@ function atualizarDiaSemana(){
   var dt = new Date(+partes[0], +partes[1] - 1, +partes[2]);
   campo.value = DIAS_DA_SEMANA[dt.getDay()];
 }
+function diaDaSemanaDeData(dataISO){
+  if(!dataISO) return '';
+  var partes = dataISO.split('-');
+  var dt = new Date(+partes[0], +partes[1] - 1, +partes[2]);
+  return DIAS_DA_SEMANA[dt.getDay()];
+}
 
 /* =====================================================================
    RETIRADA x ENTREGA: quando é retirada, não existe entregador —
@@ -649,11 +698,28 @@ function atualizarVisibilidadeEntregador(){
 function irParaProximoDepoisDoPagamento(){
   irParaAba(valorCampo('tipo-ent') === 'RETIRADA' ? 'prev' : 'ent');
 }
+function atualizarVisibilidadeFormaPagamentoEntrega(){
+  var wrapper = document.getElementById('e-pgto-wrapper');
+  if(wrapper) wrapper.style.display = valorCampo('e-status') === 'pago' ? 'none' : '';
+}
 
 /* =====================================================================
    ITENS DO PEDIDO
 ===================================================================== */
 function removerItem(i){ itensPedido.splice(i, 1); renderizarItens(); }
+
+function adicionarItemManualRapido(){
+  var nome = valorCampo('rapido-nome').trim();
+  if(!nome){ document.getElementById('rapido-nome').focus(); return; }
+  var qtd = parseInt(valorCampo('rapido-qtd')) || 1;
+  var preco = parseFloat(valorCampo('rapido-preco')) || 0;
+  itensPedido.push({ n: nome, cod: '', q: qtd, u: preco, img: null, imgUrl: null, tipoFlor: '', corFlor: '', corEmbal: '', adicionais: [] });
+  renderizarItens();
+  document.getElementById('rapido-nome').value = '';
+  document.getElementById('rapido-qtd').value = '1';
+  document.getElementById('rapido-preco').value = '0';
+  document.getElementById('rapido-nome').focus();
+}
 
 function renderizarItens(){
   var container = document.getElementById('lista');
@@ -663,15 +729,17 @@ function renderizarItens(){
     var linha = document.createElement('div');
     linha.className = 'irow';
     linha.innerHTML =
-      '<div class="thb" onclick="abrirSeletorFoto(' + i + ')" title="Clique para foto">'
-        + (srcFoto ? '<img src="' + srcFoto + '">' : '<span class="cam">📷</span>')
-        + (item.cod ? '<span class="codebadge">#' + escapeHTML(item.cod) + '</span>' : '')
-        + (item.imgUrl && !item.img ? '<span class="badge">URL</span>' : '')
+      '<div style="display:flex;flex-direction:column;align-items:center;gap:2px">'
+        + '<div class="thb" onclick="abrirSeletorFoto(' + i + ')" title="Clique para foto">'
+          + (srcFoto ? '<img src="' + srcFoto + '">' : '<span class="cam">📷</span>')
+          + (item.imgUrl && !item.img ? '<span class="badge">URL</span>' : '')
+        + '</div>'
+        + (item.cod ? '<span class="cod-caption">#' + escapeHTML(item.cod) + '</span>' : '')
       + '</div>'
       + '<input type="text" placeholder="Produto" value="' + escapeHTML(item.n) + '" oninput="itensPedido[' + i + '].n=this.value"/>'
       + '<input type="number" min="1" step="1" value="' + item.q + '" oninput="itensPedido[' + i + '].q=+this.value||1;calcularTotais()"/>'
       + '<input type="number" min="0" step="0.01" value="' + item.u + '" oninput="itensPedido[' + i + '].u=+this.value||0;calcularTotais()"/>'
-      + '<span style="font-size:13px;font-weight:700">' + formatarMoeda(item.q * item.u + totalAdicionaisDoItem(item)) + '</span>'
+      + '<span class="item-total" style="font-size:13px;font-weight:700">' + formatarMoeda(item.q * item.u + totalAdicionaisDoItem(item)) + '</span>'
       + '<button class="dbtn" onclick="removerItem(' + i + ')">×</button>';
     container.appendChild(linha);
 
@@ -695,11 +763,21 @@ function renderizarItens(){
     var blocoAdicionais = document.createElement('div');
     blocoAdicionais.className = 'adicionais-bloco';
     var adicionaisHtml = (item.adicionais || []).map(function(ad, j){
-      return '<div class="adicional-row"><span>↳ ' + escapeHTML(ad.nome) + (ad.valor > 0 ? ' — ' + formatarMoeda(ad.valor) : '') + '</span>'
+      return '<div class="adicional-row"><span>↳ ' + escapeHTML(descricaoAdicional(ad)) + (ad.valor > 0 ? ' — ' + formatarMoeda(ad.valor) : '') + '</span>'
         + '<button class="dbtn" style="width:20px;height:20px;font-size:13px" onclick="removerAdicionalDoItem(' + i + ',' + j + ')">×</button></div>';
     }).join('');
-    blocoAdicionais.innerHTML = adicionaisHtml
-      + '<button class="btn" style="font-size:11px;padding:4px 10px;margin-bottom:8px" onclick="adicionarAdicionalAoItem(' + i + ')">+ adicional embutido neste item</button>';
+    if(formularioAdicionalAberto === i){
+      adicionaisHtml += '<div class="adicional-form">'
+        + '<div><label class="subcampo-lbl">Nome do adicional</label><input type="text" class="subcampo" id="ad-nome-' + i + '" placeholder="Ex: Ferreros Rocher"/></div>'
+        + '<div><label class="subcampo-lbl">Qtd</label><input type="number" class="subcampo" id="ad-qtd-' + i + '" value="1" min="1" oninput="atualizarPreviaAdicional(' + i + ')"/></div>'
+        + '<div><label class="subcampo-lbl">Unit. (R$)</label><input type="number" class="subcampo" id="ad-unit-' + i + '" value="0" min="0" step="0.01" oninput="atualizarPreviaAdicional(' + i + ')"/></div>'
+        + '<div><label class="subcampo-lbl">Total</label><div id="ad-total-' + i + '" style="font-weight:700;font-size:13px;padding:5px 0">R$ 0,00</div></div>'
+        + '<div style="display:flex;gap:5px"><button class="btn btnp" style="padding:6px 10px;font-size:11px" onclick="confirmarAdicionalInline(' + i + ')">OK</button><button class="btn" style="padding:6px 10px;font-size:11px" onclick="fecharFormularioAdicional()">✕</button></div>'
+      + '</div>';
+    }else{
+      adicionaisHtml += '<button class="btn" style="font-size:11px;padding:4px 10px;margin-bottom:8px" onclick="abrirFormularioAdicional(' + i + ')">+ adicional embutido neste item</button>';
+    }
+    blocoAdicionais.innerHTML = adicionaisHtml;
     container.appendChild(blocoAdicionais);
   });
   calcularTotais();
@@ -715,13 +793,28 @@ function aoSelecionarFoto(e){
   e.target.value = '';
 }
 
-function adicionarAdicionalAoItem(i){
-  var nome = prompt('Nome do adicional (embutido neste item, ex: "4 Ferreros Rocher"):');
-  if(!nome || !nome.trim()) return;
-  var valorStr = prompt('Valor extra do adicional (R$, deixe 0 se já estiver incluso no preço):', '0');
-  var valor = parseFloat((valorStr || '0').replace(',', '.')) || 0;
+function abrirFormularioAdicional(i){
+  formularioAdicionalAberto = (formularioAdicionalAberto === i) ? null : i;
+  renderizarItens();
+  if(formularioAdicionalAberto === i){
+    setTimeout(function(){ var el = document.getElementById('ad-nome-' + i); if(el) el.focus(); }, 30);
+  }
+}
+function fecharFormularioAdicional(){ formularioAdicionalAberto = null; renderizarItens(); }
+function atualizarPreviaAdicional(i){
+  var qtd = parseInt(valorCampo('ad-qtd-' + i)) || 1;
+  var unit = parseFloat(valorCampo('ad-unit-' + i)) || 0;
+  var totalEl = document.getElementById('ad-total-' + i);
+  if(totalEl) totalEl.textContent = formatarMoeda(qtd * unit);
+}
+function confirmarAdicionalInline(i){
+  var nome = valorCampo('ad-nome-' + i).trim();
+  if(!nome){ document.getElementById('ad-nome-' + i).focus(); return; }
+  var qtd = parseInt(valorCampo('ad-qtd-' + i)) || 1;
+  var unit = parseFloat(valorCampo('ad-unit-' + i)) || 0;
   if(!itensPedido[i].adicionais) itensPedido[i].adicionais = [];
-  itensPedido[i].adicionais.push({ nome: nome.trim(), valor: valor });
+  itensPedido[i].adicionais.push({ nome: nome, qtd: qtd, valorUnit: unit, valor: qtd * unit });
+  formularioAdicionalAberto = null;
   renderizarItens();
 }
 function removerAdicionalDoItem(i, j){
@@ -747,8 +840,8 @@ function calcularTotais(){
   setTexto('faltav', formatarMoeda(faltaPagar));
 
   document.querySelectorAll('.irow:not(.hdr)').forEach(function(linha, i){
-    var spans = linha.querySelectorAll('span');
-    if(spans[0] && itensPedido[i]) spans[0].textContent = formatarMoeda(itensPedido[i].q * itensPedido[i].u + totalAdicionaisDoItem(itensPedido[i]));
+    var totalSpan = linha.querySelector('.item-total');
+    if(totalSpan && itensPedido[i]) totalSpan.textContent = formatarMoeda(itensPedido[i].q * itensPedido[i].u + totalAdicionaisDoItem(itensPedido[i]));
   });
 }
 
@@ -899,7 +992,7 @@ function restaurarEstado(s){
   atualizarLinkWhatsApp(); setValor('dped', s.dped);
   var tipoEl = document.getElementById('tipo-ent'); if(tipoEl) tipoEl.value = s.tipo_ent || 'ENTREGA';
   atualizarVisibilidadeEntregador();
-  setValor('hor-ini', s.hor_ini); setValor('hor-fim', s.hor_fim); setValor('nped', s.nped);
+  setValor('hor-ini', s.hor_ini); setValor('hor-fim', s.hor_fim); definirNumeroPedido(s.nped);
   setValor('obs', s.obs);
   setValor('taxa', s.taxa); setValor('taxa-rapida', s.taxa); setValor('desc', s.desc); setValor('pago', s.pago);
   var cpgtoEl = document.getElementById('cpgto'); if(cpgtoEl) cpgtoEl.value = s.cpgto || '';
@@ -907,6 +1000,7 @@ function restaurarEstado(s){
   setValor('e-recebe', s.e_recebe); setValor('e-wpp', s.e_wpp); setValor('e-end', s.e_end);
   setValor('e-bairro', s.e_bairro); setValor('e-comp', s.e_comp); setValor('e-obs', s.e_obs);
   var statusEl = document.getElementById('e-status'); if(statusEl) statusEl.value = s.e_status || 'cobrar';
+  atualizarVisibilidadeFormaPagamentoEntrega();
   var pgtoEl = document.getElementById('e-pgto'); if(pgtoEl) pgtoEl.value = s.e_pgto || '';
   var anonimoEl = document.getElementById('e-anonimo'); if(anonimoEl) anonimoEl.checked = !!s.e_anonimo;
   itensPedido = (s.its || []).map(function(it){
@@ -976,7 +1070,7 @@ function renderizarHistorico(){
       return '<div class="hist-row">'
         + '<span style="font-weight:700">#' + p.num + '</span>'
         + '<span>' + p.cliente + '<br><span style="font-size:11px;color:var(--muted)">' + p.tipo + '</span></span>'
-        + '<span>' + dataFormatada + '</span>'
+        + '<span>' + dataFormatada + (p.data ? '<br><span style="font-size:10px;color:var(--muted);font-weight:400">' + diaDaSemanaDeData(p.data) + '</span>' : '') + '</span>'
         + '<span>' + totalFormatado + situacaoFalta + '</span>'
         + '<div>'
           + '<div class="hist-btns">'
@@ -1034,10 +1128,11 @@ function resetarComanda(){
     if(el) el.value = id === 'tipo-ent' ? 'ENTREGA' : id === 'e-status' ? 'cobrar' : '';
   });
   atualizarVisibilidadeEntregador();
+  atualizarVisibilidadeFormaPagamentoEntrega();
   document.getElementById('dped').value = new Date().toISOString().split('T')[0];
   var anonimoEl = document.getElementById('e-anonimo'); if(anonimoEl) anonimoEl.checked = false;
   atualizarDiaSemana();
-  document.getElementById('nped').value = proximoNumeroLocal();
+  definirNumeroPedido(proximoNumeroLocal());
   atualizarUITroco();
   renderizarItens();
   var caixaResumo = document.getElementById('wpp-resumo-box');
@@ -1083,7 +1178,7 @@ function gerarTextoConfirmacaoWhatsApp(){
     var linha = '  • ' + (item.q > 1 ? item.q + 'x ' : '') + descreverItemNatural(item) + ' — ' + formatarMoeda(item.u);
     if(item.q > 1) linha += ' cada (' + formatarMoeda(item.q * item.u) + ')';
     (item.adicionais || []).forEach(function(ad){
-      linha += '\n     + ' + ad.nome + (ad.valor > 0 ? ' (' + formatarMoeda(ad.valor) + ')' : '');
+      linha += '\n     + ' + descricaoAdicional(ad) + (ad.valor > 0 ? ' (' + formatarMoeda(ad.valor) + ')' : '');
     });
     return linha;
   }).join('\n');
@@ -1161,7 +1256,7 @@ function montarFolhaDaComanda(){
     }
     linhasHtml += '<tr>'
       + '<td style="width:55%">' + (item ? (item.q > 1 ? '<b>' + item.q + 'x</b> ' : '') + (item.cod ? '<b>#' + escapeHTML(item.cod) + '</b> ' : '') + escapeHTML(item.n)
-          + (item.adicionais || []).map(function(ad){ return '<br><span style="font-size:9px;color:#555">+ ' + escapeHTML(ad.nome) + (ad.valor > 0 ? ' (' + formatarValor(ad.valor) + ')' : '') + '</span>'; }).join('')
+          + (item.adicionais || []).map(function(ad){ return '<br><span style="font-size:10.5px;color:#000;font-weight:700;background:#f0e6d2;padding:1px 5px;border-radius:3px;display:inline-block;margin-top:2px">+ ' + escapeHTML(descricaoAdicional(ad)) + (ad.valor > 0 ? ' — R$ ' + formatarValor(ad.valor) : '') + '</span>'; }).join('')
         : '&nbsp;') + '</td>'
       + '<td style="width:25%;font-size:9px">' + corLinha + '</td>'
       + '<td style="width:20%;text-align:right">' + (item && (item.u > 0 || totalAdicionaisDoItem(item) > 0) ? formatarValor(item.q * item.u + totalAdicionaisDoItem(item)) : '&nbsp;') + '</td>'
@@ -1240,7 +1335,7 @@ function montarFolhaDaComanda(){
               + '<td class="lbl">Desconto</td>'
               + '<td class="vr">' + (desconto > 0 ? '- ' + formatarValor(desconto) : '&nbsp;') + '</td>'
             + '</tr>'
-            + '<tr><td class="lbl">Entrega</td><td class="vr">' + (taxa > 0 ? formatarValor(taxa) : '&nbsp;') + '</td></tr>'
+            + '<tr><td class="lbl">' + (tipoEntrega === 'RETIRADA' ? 'Retirada' : 'Entrega') + '</td><td class="vr">' + (tipoEntrega === 'RETIRADA' ? '&nbsp;' : (taxa > 0 ? formatarValor(taxa) : '&nbsp;')) + '</td></tr>'
             + '<tr><td class="tlbl">TOTAL</td><td class="tvr">' + formatarValor(total) + '</td></tr>'
             + '<tr><td style="vertical-align:top;padding-top:3px">' + celulaFalta + '</td><td class="vr" style="vertical-align:top;padding-top:3px">' + valorFalta + '</td></tr>'
           + '</table>'
@@ -1559,6 +1654,7 @@ async function registrarVendasDoPedidoNaPrecificacao(itens, dataISO){
 document.getElementById('dped').value = new Date().toISOString().split('T')[0];
 atualizarDiaSemana();
 atualizarVisibilidadeEntregador();
+atualizarVisibilidadeFormaPagamentoEntrega();
 renderizarItens();
 carregarPendentesClientesLocal();
 renderizarPendentesClientes();
@@ -1576,7 +1672,7 @@ renderizarPendentesClientes();
     renderizarHistorico();
 
     var numero = await obterProximoNumeroDaNuvem();
-    document.getElementById('nped').value = numero;
+    definirNumeroPedido(numero);
 
     var catalogoNuvem = await carregarCatalogoDaNuvem();
     var inspiracoesNuvem = await carregarInspiracoesDaNuvem();
@@ -1611,7 +1707,7 @@ renderizarPendentesClientes();
     console.error('Erro ao carregar dados:', erro);
     carregarHistoricoLocal(); renderizarHistorico();
     try{
-      document.getElementById('nped').value = proximoNumeroLocal();
+      definirNumeroPedido(proximoNumeroLocal());
       var cacheLocal2 = localStorage.getItem('cat_v2');
       if(cacheLocal2) catalogo = JSON.parse(cacheLocal2);
     }catch(e2){}
