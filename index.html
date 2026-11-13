@@ -25,6 +25,7 @@
   --red-soft:#fbe7e4;
   --prod-red:#ffd2d2;
   --prod-orange:#ffe0b8;
+  --prod-attn:#ffb066;
   --prod-yellow:#fff3b0;
   --prod-pink:#ffd6ec;
   --prod-green:#cdefdb;
@@ -192,8 +193,7 @@ input[readonly]{background:#faf6f3;color:var(--muted);cursor:default}
   background:#fff;cursor:pointer;font-family:inherit;
 }
 .hist-empty{padding:24px;text-align:center;color:var(--muted)}
-.legenda-producao{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-.legenda-chip{font-size:11px;font-weight:700;padding:5px 11px;border-radius:20px;color:#4a3a30}
+.legenda-mini{font-size:9.5px;color:var(--muted);line-height:1.4;margin:2px 0 5px;white-space:nowrap}
 .hist-btns button.ativo{border-width:2px;font-weight:800}
 
 /* =====================================================================
@@ -360,6 +360,7 @@ async function obterProximoNumeroDaNuvem(){
 </script>
 </head>
 <body>
+<datalist id="ad-sugestoes"></datalist>
 <div class="app">
 
 <!-- CABEÇALHO: número do pedido, sempre visível -->
@@ -404,7 +405,11 @@ async function obterProximoNumeroDaNuvem(){
     </div>
     <div id="cliente-status" class="rf" style="display:none;font-size:12.5px"></div>
     <div class="r2">
-      <div><label class="fl">Vai cartãozinho?</label><input id="vai-cartao" type="text" placeholder="Sim / Não / texto"/></div>
+      <div><label class="fl">Vai cartãozinho?</label><select id="vai-cartao">
+          <option value="">Selecione...</option>
+          <option value="Sim">Sim</option>
+          <option value="Não">Não</option>
+        </select></div>
       <div>
         <label class="fl">Identificar no cartão?</label>
         <select id="id-cartao">
@@ -607,13 +612,6 @@ async function obterProximoNumeroDaNuvem(){
         <button class="btn" style="font-size:11px;padding:6px 11px" onclick="exportarHistoricoCSV()">⬇ Exportar CSV</button>
         <button class="btn btnd" style="font-size:11px;padding:6px 11px" onclick="limparHistorico()">🗑 Limpar tudo</button>
       </div>
-    </div>
-    <div class="legenda-producao">
-      <span class="legenda-chip" style="background:var(--prod-red)">🔴 Atenção — atrasado</span>
-      <span class="legenda-chip" style="background:var(--prod-orange)">🟠 Atenção — horário chegando</span>
-      <span class="legenda-chip" style="background:var(--prod-yellow)">🟡 Em produção</span>
-      <span class="legenda-chip" style="background:var(--prod-pink)">🩷 Conferir — falta cartão/detalhe</span>
-      <span class="legenda-chip" style="background:var(--prod-green)">🟢 Pronto p/ entrega ou retirada</span>
     </div>
     <div id="hist-lista"><div class="hist-empty">Nenhum pedido salvo ainda.</div></div>
   </div>
@@ -831,7 +829,7 @@ function renderizarItens(){
     }).join('');
     if(formularioAdicionalAberto === i){
       adicionaisHtml += '<div class="adicional-form">'
-        + '<div><label class="subcampo-lbl">Nome do adicional</label><input type="text" class="subcampo" id="ad-nome-' + i + '" placeholder="Ex: Ferreros Rocher"/></div>'
+        + '<div><label class="subcampo-lbl">Nome do adicional</label><input type="text" class="subcampo" id="ad-nome-' + i + '" list="ad-sugestoes" autocomplete="off" placeholder="Ex: Ferrero Rocher" onchange="aoEscolherNomeAdicional(' + i + ')"/></div>'
         + '<div><label class="subcampo-lbl">Qtd</label><input type="number" class="subcampo" id="ad-qtd-' + i + '" value="1" min="1" oninput="atualizarPreviaAdicional(' + i + ')"/></div>'
         + '<div><label class="subcampo-lbl">Unit. (R$)</label><input type="number" class="subcampo" id="ad-unit-' + i + '" value="0" min="0" step="0.01" oninput="atualizarPreviaAdicional(' + i + ')"/></div>'
         + '<div><label class="subcampo-lbl">Total</label><div id="ad-total-' + i + '" style="font-weight:700;font-size:13px;padding:5px 0">R$ 0,00</div></div>'
@@ -856,7 +854,29 @@ function aoSelecionarFoto(e){
   e.target.value = '';
 }
 
+/* Nomes sugeridos para adicionais: lista base + os que você já usou (com o último valor unitário) */
+var ADICIONAIS_BASE = ['Ferrero Rocher', 'Raffaello', 'Kinder Bueno', 'Bombom', 'Rosa extra', 'Balão', 'Pelúcia', 'Cartão personalizado'];
+function mapaAdicionaisUsados(){
+  var m = {};
+  var coletar = function(its){ (its || []).forEach(function(it){ (it.adicionais || []).forEach(function(a){ if(a && a.nome && a.valorUnit > 0) m[a.nome] = a.valorUnit; }); }); };
+  historico.forEach(function(p){ coletar(p.state && p.state.its); });
+  coletar(itensPedido);
+  return m;
+}
+function atualizarSugestoesAdicionais(){
+  var dl = document.getElementById('ad-sugestoes'); if(!dl) return;
+  var nomes = ADICIONAIS_BASE.slice();
+  Object.keys(mapaAdicionaisUsados()).forEach(function(n){ if(!nomes.some(function(x){ return x.toLowerCase() === n.toLowerCase(); })) nomes.push(n); });
+  dl.innerHTML = nomes.map(function(n){ return '<option value="' + escapeHTML(n) + '"></option>'; }).join('');
+}
+function aoEscolherNomeAdicional(i){
+  var nome = valorCampo('ad-nome-' + i).trim().toLowerCase(), m = mapaAdicionaisUsados(), unitEl = document.getElementById('ad-unit-' + i);
+  if(!nome || !unitEl || (parseFloat(unitEl.value) || 0) > 0) return;
+  Object.keys(m).forEach(function(k){ if(k.toLowerCase() === nome){ unitEl.value = m[k]; atualizarPreviaAdicional(i); } });
+}
+
 function abrirFormularioAdicional(i){
+  atualizarSugestoesAdicionais();
   formularioAdicionalAberto = (formularioAdicionalAberto === i) ? null : i;
   renderizarItens();
   if(formularioAdicionalAberto === i){
@@ -1051,7 +1071,7 @@ function capturarEstadoAtual(){
 }
 function restaurarEstado(s){
   var setValor = function(id, v){ var el = document.getElementById(id); if(el) el.value = v || ''; };
-  setValor('cnome', s.cnome); setValor('ctel', s.ctel); setValor('vai-cartao', s.vai_cartao);
+  setValor('cnome', s.cnome); setValor('ctel', s.ctel); setValor('vai-cartao', /^n(ã|a)o$/i.test((s.vai_cartao||'').trim()) ? 'Não' : (s.vai_cartao ? 'Sim' : ''));
   setValor('id-cartao', s.id_cartao); setValor('remetente', s.remetente); setValor('presenteado', s.presenteado);
   atualizarLinkWhatsApp(); setValor('dped', s.dped);
   var tipoEl = document.getElementById('tipo-ent'); if(tipoEl) tipoEl.value = s.tipo_ent || 'ENTREGA';
@@ -1127,6 +1147,7 @@ function imprimirPedido(id){ var p = historico.find(function(p){ return p.id ===
 
 function descricaoStatusAtual(statusH, status){
   if(statusH === 'atrasado') return { texto: '🔴 Atrasado', cor: '#a11' };
+  if(statusH === 'atencao') return { texto: '🟧 Atenção ao horário', cor: '#7a3d00' };
   if(statusH === 'chegando') return { texto: '🟠 Horário chegando', cor: '#8a5a00' };
   if(status === 'em_producao') return { texto: '🟡 Em produção', cor: '#7a6300' };
   if(status === 'conferir') return { texto: '🩷 Conferir', cor: '#a1266e' };
@@ -1156,6 +1177,7 @@ function linhaHistoricoHtml(p, visaoFinalizados){
     var statusH = statusHorario(p);
     var status = p.statusProducao || 'nenhum';
     var cor = statusH === 'atrasado' ? 'var(--prod-red)'
+      : statusH === 'atencao' ? 'var(--prod-attn)'
       : statusH === 'chegando' ? 'var(--prod-orange)'
       : status === 'em_producao' ? 'var(--prod-yellow)'
       : status === 'conferir' ? 'var(--prod-pink)'
@@ -1185,6 +1207,7 @@ function linhaHistoricoHtml(p, visaoFinalizados){
         + '<button onclick="editarPedido(' + p.id + ')">✏️</button>'
         + '<button onclick="apagarPedido(' + p.id + ')" style="color:var(--red)">🗑</button>'
       + '</div>'
+      + (visaoFinalizados ? '' : '<div class="legenda-mini">🟡 em produção · 🩷 conferir cartão/detalhe · 🟢 pronto</div>')
       + (p.state && p.state.ctel
         ? '<a href="https://wa.me/55' + ((p.state.ctel || '').replace(/[^0-9]/g, '')) + '" target="_blank" style="display:block;padding:5px 8px;font-size:11px;border-radius:6px;background:#25d366;color:#fff;text-decoration:none;font-weight:700;text-align:center">💬 WhatsApp</a>'
         : '')
@@ -1198,17 +1221,27 @@ function linhaHistoricoHtml(p, visaoFinalizados){
    - Rosa/Laranja/Verde: alternados manualmente pelos botões
 ===================================================================== */
 function statusHorario(p){
+  /* 🟠 Horário chegando  : a partir de 30 min antes do PRIMEIRO horário
+     🟧 Atenção ao horário: nos últimos 30 min antes do prazo FINAL (só quando há "de ... até ...")
+     🔴 Atrasado          : passou do prazo final (ou do único horário)  */
   var s = p.state || {};
   if(!s.dped) return null;
-  var horarioAlvo = s.hor_fim || s.hor_ini;
-  if(!horarioAlvo) return null;
-  var partesData = s.dped.split('-');
-  var partesHora = horarioAlvo.split(':');
-  if(partesHora.length < 2) return null;
-  var alvo = new Date(+partesData[0], +partesData[1] - 1, +partesData[2], +partesHora[0], +partesHora[1]);
-  var diffMin = (alvo.getTime() - Date.now()) / 60000;
-  if(diffMin < 0) return 'atrasado';
-  if(diffMin <= 30) return 'chegando';
+  var ini = s.hor_ini || s.hor_fim, fim = s.hor_fim || s.hor_ini;
+  if(!ini) return null;
+  var d = s.dped.split('-');
+  var quando = function(hhmm){
+    var h = String(hhmm).split(':');
+    if(h.length < 2) return null;
+    return new Date(+d[0], +d[1] - 1, +d[2], +h[0], +h[1]).getTime();
+  };
+  var tIni = quando(ini), tFim = quando(fim);
+  if(tIni === null || tFim === null) return null;
+  var agora = Date.now();
+  var faltaFim = (tFim - agora) / 60000, faltaIni = (tIni - agora) / 60000;
+  var temJanela = tFim > tIni;
+  if(faltaFim < 0) return 'atrasado';
+  if(temJanela && faltaFim <= 30) return 'atencao';
+  if(faltaIni <= 30) return 'chegando';
   return null;
 }
 
@@ -1863,6 +1896,7 @@ atualizarVisibilidadeFormaPagamentoEntrega();
 renderizarItens();
 carregarCacheClientes();
 atualizarContadorConferir();
+atualizarSugestoesAdicionais();
 setInterval(renderizarHistorico, 60000); // recalcula a urgência por horário a cada minuto
 
 (async function inicializarApp(){
