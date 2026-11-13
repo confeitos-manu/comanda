@@ -24,8 +24,9 @@
   --red:#c0392b;
   --red-soft:#fbe7e4;
   --prod-red:#ffd2d2;
-  --prod-pink:#ffd6ec;
   --prod-orange:#ffe0b8;
+  --prod-yellow:#fff3b0;
+  --prod-pink:#ffd6ec;
   --prod-green:#cdefdb;
   --radius:12px;
   --shadow:0 2px 10px rgba(58,43,37,.06);
@@ -67,6 +68,13 @@ body{
 .r3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px}
 .r4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:8px}
 .rf{margin-bottom:8px}
+.sug-lista{position:absolute;left:0;right:0;top:100%;margin-top:2px;background:#fff;border:1px solid var(--line,#e6d9d5);border-radius:10px;box-shadow:0 8px 20px rgba(120,60,70,.15);z-index:30;max-height:250px;overflow:auto}
+.sug-item{padding:8px 12px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid #f3eae7}
+.sug-item:last-child{border-bottom:0}
+.sug-item:hover,.sug-item:active{background:#fbf1f1}
+.sug-item small{color:#8a7a78;white-space:nowrap}
+.cli-ok{background:#eef6ee;border:1px solid var(--green);border-radius:8px;padding:6px 12px;color:#2f6b3a}
+.cli-novo{background:#fff7e6;border:1px solid #e8c36a;border-radius:8px;padding:6px 12px;color:#8a6414}
 .fl{font-size:11px;color:var(--muted);display:block;margin-bottom:3px;font-weight:600}
 
 input[type=text],input[type=tel],input[type=date],input[type=time],input[type=number],select,textarea{
@@ -367,9 +375,9 @@ async function obterProximoNumeroDaNuvem(){
   <button class="ntab" id="nav-ent" onclick="irParaAba('ent')">3. Entrega/Retirada</button>
   <button class="ntab" onclick="irParaAba('pgto')">4. Pagamento</button>
   <button class="ntab" onclick="irParaAba('prev')">5. Comanda</button>
-  <button class="ntab" onclick="irParaAba('clientes')">🌿 Clientes (<span id="clientes-contador-nav">0</span>)</button>
   <button class="ntab" onclick="irParaAba('hist')">🏭 Produção</button>
   <button class="ntab" onclick="irParaAba('final')">✅ Finalizados</button>
+  <button class="ntab" onclick="window.open(URL_APP_CLIENTES,'_blank')" title="Abre o app de Clientes (aba Conferir)">🌿 Clientes (<span id="clientes-contador-nav">0</span>) ↗</button>
 </div>
 
 <!-- ===== 1. PEDIDO ===== -->
@@ -377,24 +385,25 @@ async function obterProximoNumeroDaNuvem(){
   <div class="fc">
     <div class="ft">Cliente (quem compra)</div>
     <div class="r2">
-      <div><label class="fl">Nome do cliente</label><input id="cnome" type="text" placeholder="Ex: Vitor"/></div>
-      <div>
-        <label class="fl">WhatsApp do cliente</label>
+      <div style="position:relative">
+        <label class="fl">WhatsApp do cliente <span style="font-weight:400;color:var(--muted)">— digite e puxa o cadastro</span></label>
         <div style="display:flex;gap:6px;align-items:center">
-          <input id="ctel" type="tel" placeholder="(49) 99999-9999" style="flex:1" oninput="atualizarLinkWhatsApp()" onblur="buscarClienteEAvisarNome()"/>
+          <input id="ctel" type="tel" inputmode="numeric" autocomplete="off" placeholder="(49) 99999-9999" style="flex:1" oninput="atualizarLinkWhatsApp();sugerirClientes('tel')" onfocus="sugerirClientes('tel')" onblur="esconderSugestoesClientes()"/>
           <a id="wpp-link-btn" href="#" target="_blank"
             style="display:none;padding:8px 12px;background:#25d366;color:#fff;border-radius:8px;
             font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap">
             💬
           </a>
         </div>
+        <div id="sug-tel" class="sug-lista" style="display:none"></div>
+      </div>
+      <div style="position:relative">
+        <label class="fl">Nome do cliente <span style="font-weight:400;color:var(--muted)">— ou busque pelo nome</span></label>
+        <input id="cnome" type="text" autocomplete="off" placeholder="Ex: Vitor" oninput="sugerirClientes('nome')" onfocus="sugerirClientes('nome')" onblur="esconderSugestoesClientes()"/>
+        <div id="sug-nome" class="sug-lista" style="display:none"></div>
       </div>
     </div>
-    <div id="cliente-sugestao" class="rf" style="display:none;background:#eef6ee;border:1px solid var(--green);border-radius:8px;padding:8px 12px;font-size:12.5px">
-      📇 Encontramos <b id="cliente-sugestao-nome"></b> cadastrado(a) no app de Clientes —
-      <button class="btn" style="padding:3px 9px;font-size:11px" onclick="usarNomeSugerido()">Usar esse nome</button>
-      <button class="btn" style="padding:3px 9px;font-size:11px" onclick="fecharSugestaoCliente()">Ignorar</button>
-    </div>
+    <div id="cliente-status" class="rf" style="display:none;font-size:12.5px"></div>
     <div class="r2">
       <div><label class="fl">Vai cartãozinho?</label><input id="vai-cartao" type="text" placeholder="Sim / Não / texto"/></div>
       <div>
@@ -571,7 +580,6 @@ async function obterProximoNumeroDaNuvem(){
 
   <div class="acts no-print" style="margin-bottom:14px">
     <button class="btn btnp" onclick="window.print()">🖨 Imprimir / Salvar PDF</button>
-    <button class="btn btn-clientes" onclick="marcarPedidoParaClientes()">🌿 Marcar p/ lançar no Clientes</button>
     <button class="btn" onclick="irParaAba('ent')">← Entregador</button>
     <button class="btn btnd" onclick="resetarComanda()">🔄 Resetar</button>
     <span style="font-size:12px;color:var(--green)" id="auto-saved-msg"></span>
@@ -586,17 +594,6 @@ async function obterProximoNumeroDaNuvem(){
 </div>
 
 <!-- ===== PENDENTES NO APP DE CLIENTES ===== -->
-<div id="clientes-pnl" class="pnl no-print">
-  <div class="fc">
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:9px;margin-bottom:6px">
-      <div class="ft" style="margin:0;border:none;padding:0">Pendentes no app de Clientes (<span id="clientes-contador">0</span>)</div>
-      <button class="btn btn-clientes" onclick="lancarTodosPendentes()">🚀 Lançar todos</button>
-    </div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Toda vez que fechar um pedido, ele cai aqui. Lance tudo de uma vez quando quiser (ex: toda sexta) — inclusive os que ainda não estão cadastrados no app de Clientes.</div>
-    <div id="clientes-lista"><div class="hist-empty">Nenhum pedido pendente.</div></div>
-  </div>
-</div>
-
 <!-- ===== HISTÓRICO ===== -->
 <div id="hist-pnl" class="pnl no-print">
   <div class="fc">
@@ -613,9 +610,10 @@ async function obterProximoNumeroDaNuvem(){
       </div>
     </div>
     <div class="legenda-producao">
-      <span class="legenda-chip" style="background:var(--prod-red)">🔴 Atenção — horário chegando</span>
+      <span class="legenda-chip" style="background:var(--prod-red)">🔴 Atenção — atrasado</span>
+      <span class="legenda-chip" style="background:var(--prod-orange)">🟠 Atenção — horário chegando</span>
+      <span class="legenda-chip" style="background:var(--prod-yellow)">🟡 Em produção</span>
       <span class="legenda-chip" style="background:var(--prod-pink)">🩷 Conferir — falta cartão/detalhe</span>
-      <span class="legenda-chip" style="background:var(--prod-orange)">🟠 Em produção</span>
       <span class="legenda-chip" style="background:var(--prod-green)">🟢 Pronto p/ entrega ou retirada</span>
     </div>
     <div id="hist-lista"><div class="hist-empty">Nenhum pedido salvo ainda.</div></div>
@@ -668,7 +666,6 @@ var indiceFotoAtual = null;  // índice do item cuja foto está sendo trocada
 var catalogo = [];           // produtos carregados do Supabase (Catálogo)
 var historico = [];          // pedidos já salvos
 var trocoOpcao = '';         // 'sim' | 'nao' | 'perguntar'
-var pendentesClientes = [];  // fila de pedidos aguardando lançamento no app de Clientes
 var formularioAdicionalAberto = null; // índice do item com o mini-formulário de adicional aberto
 var DIAS_DA_SEMANA = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
 
@@ -676,7 +673,7 @@ var DIAS_DA_SEMANA = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Q
    NAVEGAÇÃO ENTRE ABAS
 ===================================================================== */
 function irParaAba(aba){
-  var abas = ['ped','it','ent','pgto','prev','clientes','hist','final'];
+  var abas = ['ped','it','ent','pgto','prev','hist','final'];
   var indice = abas.indexOf(aba);
   document.querySelectorAll('.ntab').forEach(function(botao, i){ botao.classList.toggle('on', i === indice); });
   document.querySelectorAll('.pnl').forEach(function(painel, i){ painel.classList.toggle('on', i === indice); });
@@ -1077,7 +1074,7 @@ function restaurarEstado(s){
 }
 
 function montarPedidoParaHistorico(){
-  var subtotal = itensPedido.reduce(function(s, item){ return s + item.q * item.u; }, 0);
+  var subtotal = itensPedido.reduce(function(s, item){ return s + item.q * item.u + totalAdicionaisDoItem(item); }, 0);
   var taxa = parseFloat(valorCampo('taxa')) || 0, desconto = parseFloat(valorCampo('desc')) || 0;
   var sinalPago = parseFloat(valorCampo('pago')) || 0;
   var total = Math.max(0, subtotal - desconto + taxa), faltaPagar = Math.max(0, total - sinalPago);
@@ -1096,7 +1093,8 @@ function salvarPedidoAutomaticamente(){
     pedido.id = historico[indiceExistente].id;
     pedido.finalizado = historico[indiceExistente].finalizado || false; // preserva o status, não reseta ao reabrir
     pedido.statusProducao = historico[indiceExistente].statusProducao || 'nenhum';
-    if(pedido.state){ pedido.state.finalizado = pedido.finalizado; pedido.state.statusProducao = pedido.statusProducao; }
+    var estAnt = historico[indiceExistente].state || {};
+    if(pedido.state){ pedido.state.finalizado = pedido.finalizado; pedido.state.statusProducao = pedido.statusProducao; if(estAnt.lancadoClientes) pedido.state.lancadoClientes = estAnt.lancadoClientes; if(estAnt.vendasRegistradas) pedido.state.vendasRegistradas = true; }
     historico[indiceExistente] = pedido;
   } else{ pedido.finalizado = false; historico.unshift(pedido); }
   salvarHistoricoLocal();
@@ -1128,6 +1126,15 @@ function apagarPedido(id){
 }
 function imprimirPedido(id){ var p = historico.find(function(p){ return p.id === id; }); if(!p) return; restaurarEstado(p.state); irParaAba('prev'); }
 
+function descricaoStatusAtual(statusH, status){
+  if(statusH === 'atrasado') return { texto: '🔴 Atrasado', cor: '#a11' };
+  if(statusH === 'chegando') return { texto: '🟠 Horário chegando', cor: '#8a5a00' };
+  if(status === 'em_producao') return { texto: '🟡 Em produção', cor: '#7a6300' };
+  if(status === 'conferir') return { texto: '🩷 Conferir', cor: '#a1266e' };
+  if(status === 'pronto') return { texto: '🟢 Pronto', cor: '#256b3f' };
+  return { texto: '⚪ Sem status', cor: 'var(--muted)' };
+}
+
 function linhaHistoricoHtml(p, visaoFinalizados){
   var dataFormatada = p.data ? p.data.split('-').reverse().join('/') : '—';
   var totalFormatado = 'R$ ' + (p.total || 0).toFixed(2).replace('.', ',');
@@ -1138,23 +1145,38 @@ function linhaHistoricoHtml(p, visaoFinalizados){
     ? '<button onclick="marcarPedidoFinalizado(' + p.id + ', false)">↩ Reabrir</button>'
     : '<button onclick="marcarPedidoFinalizado(' + p.id + ', true)" style="color:var(--green)">🚚 Saiu / Finalizar</button>';
 
+  var s = p.state || {};
+  var horarioTxt = (s.hor_ini || s.hor_fim)
+    ? ((s.hor_ini || '') + (s.hor_fim ? (' até ' + s.hor_fim) : ''))
+    : '⚠️ confirmar horário';
+
   var estiloLinha = '';
   var botoesStatusProducao = '';
+  var badgeStatus = '';
   if(!visaoFinalizados){
-    var urgente = estaProximoDoHorario(p);
+    var statusH = statusHorario(p);
     var status = p.statusProducao || 'nenhum';
-    var cor = urgente ? 'var(--prod-red)' : status === 'conferir' ? 'var(--prod-pink)' : status === 'em_producao' ? 'var(--prod-orange)' : status === 'pronto' ? 'var(--prod-green)' : '';
+    var cor = statusH === 'atrasado' ? 'var(--prod-red)'
+      : statusH === 'chegando' ? 'var(--prod-orange)'
+      : status === 'em_producao' ? 'var(--prod-yellow)'
+      : status === 'conferir' ? 'var(--prod-pink)'
+      : status === 'pronto' ? 'var(--prod-green)' : '';
     if(cor) estiloLinha = ' style="background:' + cor + '"';
+    var desc = descricaoStatusAtual(statusH, status);
+    badgeStatus = '<span style="font-size:11px;font-weight:700;color:' + desc.cor + '">' + desc.texto + '</span>';
     botoesStatusProducao =
-      '<button class="' + (status === 'conferir' ? 'ativo' : '') + '" onclick="marcarStatusProducao(' + p.id + ',\'conferir\')">🩷</button>'
-      + '<button class="' + (status === 'em_producao' ? 'ativo' : '') + '" onclick="marcarStatusProducao(' + p.id + ',\'em_producao\')">🟠</button>'
+      '<button class="' + (status === 'em_producao' ? 'ativo' : '') + '" onclick="marcarStatusProducao(' + p.id + ',\'em_producao\')">🟡</button>'
+      + '<button class="' + (status === 'conferir' ? 'ativo' : '') + '" onclick="marcarStatusProducao(' + p.id + ',\'conferir\')">🩷</button>'
       + '<button class="' + (status === 'pronto' ? 'ativo' : '') + '" onclick="marcarStatusProducao(' + p.id + ',\'pronto\')">🟢</button>';
   }
 
   return '<div class="hist-row"' + estiloLinha + '>'
     + '<span style="font-weight:700">#' + p.num + '</span>'
-    + '<span>' + p.cliente + '<br><span style="font-size:11px;color:var(--muted)">' + p.tipo + '</span></span>'
-    + '<span>' + dataFormatada + (p.data ? '<br><span style="font-size:10px;color:var(--muted);font-weight:400">' + diaDaSemanaDeData(p.data) + '</span>' : '') + '</span>'
+    + '<span style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">'
+      + '<span>' + p.cliente + '<br><span style="font-size:11px;color:var(--muted)">' + p.tipo + '</span></span>'
+      + badgeStatus
+    + '</span>'
+    + '<span>' + dataFormatada + (p.data ? '<br><span style="font-size:10px;color:var(--muted);font-weight:400">' + diaDaSemanaDeData(p.data) + '</span>' : '') + '<br><span style="font-size:10.5px;font-weight:600">' + horarioTxt + '</span></span>'
     + '<span>' + totalFormatado + situacaoFalta + '</span>'
     + '<div>'
       + '<div class="hist-btns">'
@@ -1176,17 +1198,19 @@ function linhaHistoricoHtml(p, visaoFinalizados){
    - Vermelho: automático, calculado pelo horário (não é um botão)
    - Rosa/Laranja/Verde: alternados manualmente pelos botões
 ===================================================================== */
-function estaProximoDoHorario(p){
+function statusHorario(p){
   var s = p.state || {};
-  if(!s.dped) return false;
+  if(!s.dped) return null;
   var horarioAlvo = s.hor_fim || s.hor_ini;
-  if(!horarioAlvo) return false;
+  if(!horarioAlvo) return null;
   var partesData = s.dped.split('-');
   var partesHora = horarioAlvo.split(':');
-  if(partesHora.length < 2) return false;
+  if(partesHora.length < 2) return null;
   var alvo = new Date(+partesData[0], +partesData[1] - 1, +partesData[2], +partesHora[0], +partesHora[1]);
   var diffMin = (alvo.getTime() - Date.now()) / 60000;
-  return diffMin <= 30; // faltam 30 min ou já passou do horário
+  if(diffMin < 0) return 'atrasado';
+  if(diffMin <= 30) return 'chegando';
+  return null;
 }
 
 function marcarStatusProducao(id, novoStatus){
@@ -1213,6 +1237,7 @@ function marcarPedidoFinalizado(id, valor){
   salvarHistoricoLocal();
   renderizarHistorico();
   renderizarFinalizados();
+  if(valor) enviarFinalizadoParaConferencia(p); else atualizarContadorConferir();
   supabaseFetch('/rest/v1/pedidos?id=eq.' + p.id, {
     method: 'PATCH',
     headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
@@ -1590,202 +1615,229 @@ function atualizarLinkWhatsApp(){
    Ao sair do campo WhatsApp, busca no app de Clientes; se achar,
    sugere o nome (sem forçar — Manu escolhe usar ou não).
 ===================================================================== */
-var nomeClienteSugerido = '';
-async function buscarClienteEAvisarNome(){
-  var whats = valorCampo('ctel').trim();
-  if(!whats){ fecharSugestaoCliente(); return; }
-  var doc = await buscarClientePorWhatsApp(whats);
-  var nome = doc && doc.fields && doc.fields.nome && doc.fields.nome.stringValue;
-  if(nome){
-    nomeClienteSugerido = nome;
-    var elNome = document.getElementById('cliente-sugestao-nome'); if(elNome) elNome.textContent = nome;
-    var box = document.getElementById('cliente-sugestao'); if(box) box.style.display = 'block';
+function definirCampo(id, v){ var el = document.getElementById(id); if(el) el.value = v || ''; }
+var clientesCache = [];   // [{id, nome, whats(raw), dig}]
+var sugestoesAtuais = [];
+function semAcento(t){ return (t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+
+async function carregarCacheClientes(forcar){
+  try{
+    var salvo = localStorage.getItem('clientes_cache_v1');
+    if(salvo){
+      var o = JSON.parse(salvo);
+      clientesCache = o.lista || [];
+      if(!forcar && (Date.now() - (o.ts || 0)) < 6 * 3600 * 1000) return;   // cache fresco (6h)
+    }
+  }catch(e){}
+  try{
+    var lista = [], pageToken = null;
+    do{
+      var url = FIREBASE_URL + '/clientes?key=' + FIREBASE_KEY + '&pageSize=300&mask.fieldPaths=nome&mask.fieldPaths=whats'
+        + (pageToken ? '&pageToken=' + encodeURIComponent(pageToken) : '');
+      var res = await fetch(url);
+      if(!res.ok) throw new Error('status ' + res.status);
+      var dados = await res.json();
+      (dados.documents || []).forEach(function(doc){
+        var f = doc.fields || {};
+        var nome = (f.nome && f.nome.stringValue) || '';
+        var whats = (f.whats && f.whats.stringValue) || '';
+        if(!nome && !whats) return;
+        lista.push({ id: doc.name.split('/').pop(), nome: nome, whats: whats, dig: whats.replace(/\D/g, '') });
+      });
+      pageToken = dados.nextPageToken || null;
+    } while(pageToken);
+    clientesCache = lista;
+    try{ localStorage.setItem('clientes_cache_v1', JSON.stringify({ ts: Date.now(), lista: lista })); }catch(e){}
+  }catch(e){ /* sem internet/Firebase: segue com o cache antigo, se houver */ }
+}
+
+function esconderSugestoesClientes(){
+  setTimeout(function(){
+    ['sug-tel','sug-nome'].forEach(function(id){ var el = document.getElementById(id); if(el) el.style.display = 'none'; });
+  }, 180);
+}
+
+function acharClientes(modo){
+  if(modo === 'tel'){
+    var dig = valorCampo('ctel').replace(/\D/g, '');
+    if(dig.length < 4) return [];
+    var fim = dig.length >= 10 ? dig.slice(-8) : dig;
+    return clientesCache.filter(function(c){ return c.dig && (dig.length >= 10 ? c.dig.slice(-8) === fim : c.dig.indexOf(dig) !== -1); }).slice(0, 6);
+  }
+  var q = semAcento(valorCampo('cnome').trim());
+  if(q.length < 2) return [];
+  return clientesCache.filter(function(c){ return semAcento(c.nome).indexOf(q) !== -1; })
+    .sort(function(a, b){ return semAcento(a.nome).indexOf(q) - semAcento(b.nome).indexOf(q); }).slice(0, 6);
+}
+
+function sugerirClientes(modo){
+  var achados = acharClientes(modo);
+  sugestoesAtuais = achados;
+  var boxTel = document.getElementById('sug-tel'), boxNome = document.getElementById('sug-nome');
+  if(boxTel) boxTel.style.display = 'none';
+  if(boxNome) boxNome.style.display = 'none';
+  var box = modo === 'tel' ? boxTel : boxNome;
+
+  // número completo e cliente único: já puxa o nome (só se o nome ainda estiver vazio)
+  var digCompleto = valorCampo('ctel').replace(/\D/g, '').length >= 10;
+  if(modo === 'tel' && digCompleto && achados.length === 1 && !valorCampo('cnome').trim()){
+    escolherClienteSugerido(0); return;
+  }
+  if(box && achados.length){
+    box.innerHTML = achados.map(function(c, i){
+      return '<div class="sug-item" onmousedown="event.preventDefault();escolherClienteSugerido(' + i + ')" ontouchstart="event.preventDefault();escolherClienteSugerido(' + i + ')">'
+        + '<span>' + escaparHtmlSimples(c.nome || '(sem nome)') + '</span><small>' + escaparHtmlSimples(c.whats || '') + '</small></div>';
+    }).join('');
+    box.style.display = 'block';
+  }
+  atualizarStatusCliente(modo, achados);
+}
+
+function escaparHtmlSimples(t){ return String(t).replace(/[&<>"]/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]; }); }
+
+function escolherClienteSugerido(i){
+  var c = sugestoesAtuais[i]; if(!c) return;
+  definirCampo('cnome', c.nome);
+  definirCampo('ctel', c.whats);
+  atualizarLinkWhatsApp();
+  ['sug-tel','sug-nome'].forEach(function(id){ var el = document.getElementById(id); if(el) el.style.display = 'none'; });
+  var st = document.getElementById('cliente-status');
+  if(st){ st.className = 'rf cli-ok'; st.style.display = 'block'; st.innerHTML = '✓ Cliente cadastrado no app de Clientes: <b>' + escaparHtmlSimples(c.nome) + '</b>'; }
+  if(typeof salvarPedidoAutomaticamente === 'function'){ try{ salvarPedidoAutomaticamente(); }catch(e){} }
+}
+
+function atualizarStatusCliente(modo, achados){
+  var st = document.getElementById('cliente-status'); if(!st) return;
+  var dig = valorCampo('ctel').replace(/\D/g, '');
+  if(dig.length >= 10){
+    var cad = clientesCache.some(function(c){ return c.dig && c.dig.slice(-8) === dig.slice(-8); });
+    if(cad){ st.className = 'rf cli-ok'; st.style.display = 'block'; st.innerHTML = '✓ Cliente já cadastrado no app de Clientes'; }
+    else if(clientesCache.length){ st.className = 'rf cli-novo'; st.style.display = 'block'; st.innerHTML = '🆕 Cliente novo (ainda não cadastrado) — o pedido vai para a fila de lançamento'; }
+    else st.style.display = 'none';
   }else{
-    fecharSugestaoCliente();
+    st.style.display = 'none';
   }
 }
-function usarNomeSugerido(){
-  var campo = document.getElementById('cnome'); if(campo) campo.value = nomeClienteSugerido;
-  fecharSugestaoCliente();
-}
-function fecharSugestaoCliente(){
-  var box = document.getElementById('cliente-sugestao'); if(box) box.style.display = 'none';
-}
+
+/* Mantidas por compatibilidade */
+function buscarClienteEAvisarNome(){ sugerirClientes('tel'); }
+function usarNomeSugerido(){}
+function fecharSugestaoCliente(){ esconderSugestoesClientes(); }
 
 /* =====================================================================
-   FILA DE PENDÊNCIAS: lançar pedidos no app de Clientes em lote
-   Em vez de tentar lançar na hora, o pedido entra numa fila e você
-   processa tudo de uma vez quando quiser (ex: toda sexta).
+   AO FINALIZAR: o pedido vai para a aba "Conferir" do app de Clientes
+   (lá você ajusta os dados finais e lança no histórico do cliente).
+   Aqui só: registra a venda na Precificação (uma vez) e avisa.
 ===================================================================== */
-function salvarPendentesClientesLocal(){ try{ localStorage.setItem('pendentes_clientes_v1', JSON.stringify(pendentesClientes)); }catch(e){} }
-function carregarPendentesClientesLocal(){ try{ var s = localStorage.getItem('pendentes_clientes_v1'); if(s) pendentesClientes = JSON.parse(s); }catch(e){} }
-
-function marcarPedidoParaClientes(){
-  var whats = valorCampo('ctel');
-  var nome = valorCampo('cnome');
-  if(!whats && !nome){ alert('Preencha o nome ou WhatsApp do cliente primeiro.'); return; }
-
-  var subtotal = itensPedido.reduce(function(s, item){ return s + item.q * item.u + totalAdicionaisDoItem(item); }, 0);
-  var taxa = parseFloat(valorCampo('taxa')) || 0, desconto = parseFloat(valorCampo('desc')) || 0;
-  var total = Math.max(0, subtotal - desconto + taxa);
-  var produtos = itensPedido.map(function(item){ return (item.q > 1 ? item.q + 'x ' : '') + item.n; }).join(', ');
-
-  var pendente = {
-    num: valorCampo('nped'), cliente: nome, ctel: whats,
-    produto: produtos || 'Pedido', valor: total, entrega: taxa,
-    data: valorCampo('dped') || new Date().toISOString().split('T')[0],
-    destNome: valorCampo('e-recebe') || valorCampo('presenteado') || '',
-    destTel: valorCampo('e-wpp') || '',
-    destEnd: valorCampo('e-end') || '',
-    destBairro: valorCampo('e-bairro') || '',
-    obs: valorCampo('obs') || '',
-    itens: itensPedido.map(function(it){ return { n: it.n, q: it.q, u: it.u }; }),
-    naoEncontrado: false
-  };
-
-  var indiceExistente = pendentesClientes.findIndex(function(p){ return p.num === pendente.num; });
-  if(indiceExistente >= 0) pendentesClientes[indiceExistente] = pendente;
-  else pendentesClientes.unshift(pendente);
-  salvarPendentesClientesLocal();
-  renderizarPendentesClientes();
-  alert('🌿 Pedido marcado! Quando quiser, lance tudo de uma vez na aba 🌿 Clientes.');
-}
-
-async function lancarPendenteIndividual(indice){
-  var p = pendentesClientes[indice];
-  if(!p) return;
-  var doc = await buscarClientePorWhatsApp(p.ctel || '');
-  if(doc){
-    try{
-      var clienteId = doc.name.split('/').pop();
-      await salvarPedidoNoAppDeClientes(clienteId, p);
-      pendentesClientes.splice(indice, 1);
-      salvarPendentesClientesLocal();
-      renderizarPendentesClientes();
-    }catch(e){ alert('❌ Erro ao lançar: ' + e.message); }
-  }else{
-    p.naoEncontrado = true;
-    salvarPendentesClientesLocal();
-    renderizarPendentesClientes();
-    alert('❓ Cliente não encontrado pelo WhatsApp ' + (p.ctel || '(vazio)') + '.\nCadastre no app de Clientes e tente lançar de novo.');
+var URL_APP_CLIENTES = 'https://confeitos-manu.github.io/Clientes/';
+function mostrarAviso(texto, tipo){
+  var el = document.getElementById('aviso-flutuante');
+  if(!el){
+    el = document.createElement('div'); el.id = 'aviso-flutuante';
+    el.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);max-width:90vw;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:9999;display:none';
+    document.body.appendChild(el);
   }
+  el.style.background = tipo === 'erro' ? '#fff7e6' : '#eef6ee';
+  el.style.color = tipo === 'erro' ? '#8a6414' : '#2f6b3a';
+  el.style.border = '1px solid ' + (tipo === 'erro' ? '#e8c36a' : '#7fb88a');
+  el.textContent = texto; el.style.display = 'block';
+  clearTimeout(el._t); el._t = setTimeout(function(){ el.style.display = 'none'; }, 6000);
 }
 
-async function lancarTodosPendentes(){
-  if(!pendentesClientes.length){ alert('Nenhum pedido pendente no momento.'); return; }
-  var lancados = 0, naoEncontrados = 0, restantes = [];
-  for(var i = 0; i < pendentesClientes.length; i++){
-    var p = pendentesClientes[i];
-    var doc = await buscarClientePorWhatsApp(p.ctel || '');
-    if(doc){
-      try{
-        var clienteId = doc.name.split('/').pop();
-        await salvarPedidoNoAppDeClientes(clienteId, p);
-        lancados++;
-      }catch(e){ restantes.push(p); }
-    }else{
-      p.naoEncontrado = true;
-      naoEncontrados++;
-      restantes.push(p);
-    }
+function contarParaConferir(){
+  return historico.filter(function(p){ return p.finalizado && !(p.state && p.state.lancadoClientes); }).length;
+}
+function atualizarContadorConferir(){
+  var el = document.getElementById('clientes-contador-nav'); if(el) el.textContent = contarParaConferir();
+}
+
+function salvarEstadoDoPedidoNaNuvem(p){
+  salvarHistoricoLocal();
+  supabaseFetch('/rest/v1/pedidos?id=eq.' + p.id, {
+    method: 'PATCH',
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ state: p.state })
+  }).catch(function(){});
+}
+
+function enviarFinalizadoParaConferencia(p){
+  if(!p.state) p.state = {};
+  if(!p.state.vendasRegistradas){
+    var its = (p.state.its || []).map(function(it){ return { n: it.n, q: it.q, u: it.u }; });
+    try{ registrarVendasDoPedidoNaPrecificacao(its, p.state.dped || p.data); }catch(e){}
+    p.state.vendasRegistradas = true;
+    salvarEstadoDoPedidoNaNuvem(p);
   }
-  pendentesClientes = restantes;
-  salvarPendentesClientesLocal();
-  renderizarPendentesClientes();
-  var resumo = '✅ ' + lancados + ' pedido(s) lançado(s) no app de Clientes.';
-  if(naoEncontrados) resumo += '\n❓ ' + naoEncontrados + ' cliente(s) não encontrado(s) — ficaram na lista. Cadastre-os no app de Clientes e clique em "Lançar todos" de novo.';
-  alert(resumo);
-}
-
-function removerPendente(indice){
-  if(!confirm('Remover este pedido da fila? (isso não desfaz o pedido, só tira ele da lista de pendências)')) return;
-  pendentesClientes.splice(indice, 1);
-  salvarPendentesClientesLocal();
-  renderizarPendentesClientes();
-}
-
-function renderizarPendentesClientes(){
-  var container = document.getElementById('clientes-lista');
-  var contador = document.getElementById('clientes-contador');
-  var contadorNav = document.getElementById('clientes-contador-nav');
-  if(contador) contador.textContent = pendentesClientes.length;
-  if(contadorNav) contadorNav.textContent = pendentesClientes.length;
-  if(!container) return;
-  if(!pendentesClientes.length){ container.innerHTML = '<div class="hist-empty">Nenhum pedido pendente.</div>'; return; }
-  container.innerHTML = pendentesClientes.map(function(p, i){
-    return '<div class="hist-row" style="grid-template-columns:1fr auto">'
-      + '<div>'
-        + '<b>#' + (p.num || '—') + '</b> — ' + escapeHTML(p.cliente || '(sem nome)') + (p.ctel ? ' · ' + escapeHTML(p.ctel) : '')
-        + (p.naoEncontrado ? ' <span style="color:var(--red);font-size:11px;font-weight:700">❓ não cadastrado</span>' : '')
-        + '<br><span style="font-size:12px;color:var(--muted)">' + escapeHTML(p.produto) + ' — ' + formatarMoeda(p.valor) + '</span>'
-      + '</div>'
-      + '<div class="hist-btns">'
-        + '<button onclick="lancarPendenteIndividual(' + i + ')">🌿 Lançar</button>'
-        + (p.naoEncontrado ? '<button onclick="window.open(\'https://confeitos-manu.github.io/Clientes/\',\'_blank\')">+ Cadastrar</button>' : '')
-        + '<button onclick="removerPendente(' + i + ')" style="color:var(--red)">🗑</button>'
-      + '</div>'
-    + '</div>';
-  }).join('');
+  atualizarContadorConferir();
+  if(p.state.lancadoClientes) return;
+  mostrarAviso('📋 Pedido #' + p.num + ' finalizado — confira e lance na aba Conferir do app de Clientes.');
 }
 
 /* =====================================================================
    INTEGRAÇÃO COM O SISTEMA DE CLIENTES (Firebase)
 ===================================================================== */
-async function buscarClientePorWhatsApp(whats){
-  var digitos = whats.replace(/\D/g, '');
-  if(!digitos) return null;
-  try{
-    var pageToken = null;
-    do{
-      var url = FIREBASE_URL + '/clientes?key=' + FIREBASE_KEY + '&pageSize=300' + (pageToken ? '&pageToken=' + encodeURIComponent(pageToken) : '');
-      var res = await fetch(url);
-      var dados = await res.json();
-      var encontrado = (dados.documents || []).find(function(doc){
-        var w = (doc.fields && doc.fields.whats && doc.fields.whats.stringValue) || '';
-        return w.replace(/\D/g, '').includes(digitos) || digitos.includes(w.replace(/\D/g, '').slice(-8));
-      });
-      if(encontrado) return encontrado;
-      pageToken = dados.nextPageToken || null;
-    } while(pageToken);
-    return null;
-  }catch(e){ return null; }
-}
-
-async function salvarPedidoNoAppDeClientes(clienteId, dadosPedido){
-  var url = FIREBASE_URL + '/clientes/' + clienteId + '/pedidos?key=' + FIREBASE_KEY;
-  var res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      fields: {
-        produto: { stringValue: dadosPedido.produto },
-        valor: { doubleValue: dadosPedido.valor },
-        entrega: { doubleValue: dadosPedido.entrega },
-        data: { stringValue: dadosPedido.data },
-        dataConfirmacao: { stringValue: dadosPedido.data },
-        status: { stringValue: 'finalizado-ok' },
-        destNome: { stringValue: dadosPedido.destNome },
-        destTel: { stringValue: dadosPedido.destTel },
-        destEnd: { stringValue: dadosPedido.destEnd },
-        destBairro: { stringValue: dadosPedido.destBairro },
-        obs: { stringValue: dadosPedido.obs },
-        criado: { stringValue: new Date().toISOString() },
-        atualizado: { stringValue: new Date().toISOString() }
-      }
-    })
-  });
-  if(!res.ok){
-    var corpoErro = await res.text().catch(function(){ return ''; });
-    throw new Error('Firebase recusou a gravação (' + res.status + ')' + (corpoErro ? ': ' + corpoErro.slice(0, 200) : ''));
-  }
-  return res.json();
-}
-
 /* =====================================================================
-   VENDAS: a comanda NÃO registra vendas sozinha.
-   Elas entram só pelo app de Insumos (Loja › Vendas › Importar do app
-   de clientes), onde você confere antes. Assim nenhuma venda entra em dobro.
+   INTEGRAÇÃO COM A PRECIFICAÇÃO (registra vendas, mesmo Supabase)
 ===================================================================== */
+function primeiroDiaDoMesISO(){
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-01';
+}
+
+async function calcularCustoDoProduto(nomeProduto){
+  var produtos = await supabaseFetch('/rest/v1/produtos?ativo=eq.true&nome=ilike.' + encodeURIComponent(nomeProduto) + '&select=*');
+  if(!produtos || !produtos.length) return null;
+  var produto = produtos[0];
+  var insumos = await supabaseFetch('/rest/v1/insumos?select=*');
+  var custosArr = await supabaseFetch('/rest/v1/custos_fixos?id=eq.1&select=*');
+  var perdas = await supabaseFetch('/rest/v1/perdas?data=gte.' + primeiroDiaDoMesISO() + '&select=valor');
+  var custos = custosArr && custosArr[0];
+  if(!custos) return null;
+  var perdasDoMes = (perdas || []).reduce(function(s, p){ return s + (p.valor || 0); }, 0);
+  var totalCustosFixos = custos.aluguel + custos.energia + custos.agua + custos.internet + custos.funcionarios + custos.sistemas + custos.outros + perdasDoMes;
+  var minutosDoMes = (custos.horas_dia || 0) * (custos.dias_semana || 0) * 4.33 * 60;
+  var rateioLoja = minutosDoMes > 0 ? (totalCustosFixos / minutosDoMes) * (produto.minutos_producao || 0) : 0;
+  var custoMaoDeObra = minutosDoMes > 0 ? ((custos.salario_mensal || 0) / minutosDoMes) * (produto.minutos_producao || 0) : 0;
+  var custoMateriais = (produto.materiais || []).reduce(function(s, m){
+    if(m.fixo && m.insumo_id){
+      var insumo = (insumos || []).find(function(i){ return i.id === m.insumo_id; });
+      var preco = insumo ? insumo.preco : m.valor_unitario;
+      return s + preco * (m.quantidade || 0);
+    }
+    return s + (m.fixo ? m.valor_unitario * (m.quantidade || 0) : (m.valor_unitario || 0));
+  }, 0);
+  return { produtoId: produto.id, custoTotal: custoMateriais + custoMaoDeObra + rateioLoja };
+}
+
+async function registrarVendaNaPrecificacao(nomeProduto, quantidade, precoUnitario, dataISO){
+  if(!nomeProduto || !(precoUnitario > 0)) return;
+  try{
+    var correspondencia = await calcularCustoDoProduto(nomeProduto);
+    var custoUnitario = correspondencia ? correspondencia.custoTotal : 0;
+    var margemUnitaria = precoUnitario - custoUnitario;
+    await supabaseFetch('/rest/v1/vendas', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({
+        data: dataISO || new Date().toISOString().slice(0, 10),
+        produto_id: correspondencia ? correspondencia.produtoId : null,
+        produto_nome: nomeProduto,
+        quantidade: quantidade || 1,
+        preco_unitario: precoUnitario,
+        custo_unitario: custoUnitario,
+        margem_contribuicao_unitaria: margemUnitaria,
+        margem_contribuicao_total: margemUnitaria * (quantidade || 1)
+      })
+    });
+  }catch(e){ console.error('Precificação: falha ao registrar venda', e); }
+}
+
+async function registrarVendasDoPedidoNaPrecificacao(itens, dataISO){
+  for(var i = 0; i < (itens || []).length; i++){
+    var item = itens[i];
+    await registrarVendaNaPrecificacao(item.n, item.q, item.u, dataISO);
+  }
+}
 
 /* =====================================================================
    INICIALIZAÇÃO
@@ -1795,8 +1847,8 @@ atualizarDiaSemana();
 atualizarVisibilidadeEntregador();
 atualizarVisibilidadeFormaPagamentoEntrega();
 renderizarItens();
-carregarPendentesClientesLocal();
-renderizarPendentesClientes();
+carregarCacheClientes();
+atualizarContadorConferir();
 setInterval(renderizarHistorico, 60000); // recalcula a urgência por horário a cada minuto
 
 (async function inicializarApp(){
@@ -1811,6 +1863,7 @@ setInterval(renderizarHistorico, 60000); // recalcula a urgência por horário a
     }
     renderizarHistorico();
     renderizarFinalizados();
+    atualizarContadorConferir();
 
     var numero = await obterProximoNumeroDaNuvem();
     definirNumeroPedido(numero);
