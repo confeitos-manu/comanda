@@ -386,9 +386,9 @@ async function obterProximoNumeroDaNuvem(){
     <div class="ft">Cliente (quem compra)</div>
     <div class="r2">
       <div style="position:relative">
-        <label class="fl">WhatsApp do cliente <span style="font-weight:400;color:var(--muted)">— digite e puxa o cadastro</span></label>
+        <label class="fl">WhatsApp do cliente <span style="font-weight:400;color:var(--muted)">— o cadastro é puxado só pelo número</span></label>
         <div style="display:flex;gap:6px;align-items:center">
-          <input id="ctel" type="tel" inputmode="numeric" autocomplete="off" placeholder="(49) 99999-9999" style="flex:1" oninput="atualizarLinkWhatsApp();sugerirClientes('tel')" onfocus="sugerirClientes('tel')" onblur="esconderSugestoesClientes()"/>
+          <input id="ctel" type="tel" inputmode="numeric" autocomplete="off" placeholder="(49) 9 9999-9999" style="flex:1" oninput="atualizarLinkWhatsApp();sugerirClientes('tel')" onfocus="sugerirClientes('tel')" onblur="esconderSugestoesClientes()"/>
           <a id="wpp-link-btn" href="#" target="_blank"
             style="display:none;padding:8px 12px;background:#25d366;color:#fff;border-radius:8px;
             font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap">
@@ -398,9 +398,8 @@ async function obterProximoNumeroDaNuvem(){
         <div id="sug-tel" class="sug-lista" style="display:none"></div>
       </div>
       <div style="position:relative">
-        <label class="fl">Nome do cliente <span style="font-weight:400;color:var(--muted)">— ou busque pelo nome</span></label>
-        <input id="cnome" type="text" autocomplete="off" placeholder="Ex: Vitor" oninput="sugerirClientes('nome')" onfocus="sugerirClientes('nome')" onblur="esconderSugestoesClientes()"/>
-        <div id="sug-nome" class="sug-lista" style="display:none"></div>
+        <label class="fl">Nome do cliente</label>
+        <input id="cnome" type="text" autocomplete="off" placeholder="Ex: Vitor"/>
       </div>
     </div>
     <div id="cliente-status" class="rf" style="display:none;font-size:12.5px"></div>
@@ -486,7 +485,7 @@ async function obterProximoNumeroDaNuvem(){
       <div class="ft">Dados para o entregador</div>
       <div class="r2">
         <div><label class="fl">Nome de quem vai receber</label><input id="e-recebe" type="text" placeholder="Ex: Manu"/></div>
-        <div><label class="fl">WhatsApp de quem vai receber</label><input id="e-wpp" type="tel" placeholder="(49) 99999-9999"/></div>
+        <div><label class="fl">WhatsApp de quem vai receber</label><input id="e-wpp" type="tel" inputmode="numeric" placeholder="(49) 9 9999-9999"/></div>
       </div>
       <div class="rf"><label class="fl">Endereço</label><input id="e-end" type="text" placeholder="Rua, número"/></div>
       <div class="r2">
@@ -1070,7 +1069,7 @@ function restaurarEstado(s){
   itensPedido = (s.its || []).map(function(it){
     return { n: it.n, cod: it.cod || '', q: it.q, u: it.u, img: it.img || null, imgUrl: it.imgUrl || null, tipoFlor: it.tipoFlor || '', corFlor: it.corFlor || '', corEmbal: it.corEmbal || '', adicionais: it.adicionais || [] };
   });
-  atualizarDiaSemana(); renderizarItens();
+  aplicarMascaraTelefones(); atualizarDiaSemana(); renderizarItens();
 }
 
 function montarPedidoParaHistorico(){
@@ -1599,6 +1598,26 @@ function montarFolhaDaComanda(){
 /* =====================================================================
    LINK RÁPIDO DE WHATSAPP (na aba Pedido)
 ===================================================================== */
+/* Telefone separado para ler fácil: (49) 9 9111-2233  (o 9 do celular fica isolado) */
+function formatarTelefone(v){
+  var d = String(v || '').replace(/\D/g, '');
+  if(d.length > 11 && d.indexOf('55') === 0) d = d.slice(2);
+  d = d.slice(0, 11);
+  if(!d) return '';
+  if(d.length <= 2) return '(' + d;
+  var ddd = d.slice(0, 2), r = d.slice(2);
+  if(d.length <= 6) return '(' + ddd + ') ' + r;
+  if(d.length <= 10) return '(' + ddd + ') ' + r.slice(0, 4) + '-' + r.slice(4);
+  return '(' + ddd + ') ' + r.slice(0, 1) + ' ' + r.slice(1, 5) + '-' + r.slice(5);
+}
+function aplicarMascaraTelefones(){
+  ['ctel', 'e-wpp'].forEach(function(id){ var el = document.getElementById(id); if(el && el.value) el.value = formatarTelefone(el.value); });
+}
+document.addEventListener('input', function(e){
+  var t = e.target;
+  if(t && (t.id === 'ctel' || t.id === 'e-wpp')) t.value = formatarTelefone(t.value);
+}, true);
+
 function atualizarLinkWhatsApp(){
   var valor = (valorCampo('ctel') || '').trim();
   var botao = document.getElementById('wpp-link-btn');
@@ -1657,21 +1676,16 @@ function esconderSugestoesClientes(){
   }, 180);
 }
 
-function acharClientes(modo){
-  if(modo === 'tel'){
-    var dig = valorCampo('ctel').replace(/\D/g, '');
-    if(dig.length < 4) return [];
-    var fim = dig.length >= 10 ? dig.slice(-8) : dig;
-    return clientesCache.filter(function(c){ return c.dig && (dig.length >= 10 ? c.dig.slice(-8) === fim : c.dig.indexOf(dig) !== -1); }).slice(0, 6);
-  }
-  var q = semAcento(valorCampo('cnome').trim());
-  if(q.length < 2) return [];
-  return clientesCache.filter(function(c){ return semAcento(c.nome).indexOf(q) !== -1; })
-    .sort(function(a, b){ return semAcento(a.nome).indexOf(q) - semAcento(b.nome).indexOf(q); }).slice(0, 6);
+function acharClientes(){
+  var dig = valorCampo('ctel').replace(/\D/g, '');
+  if(dig.length < 4) return [];
+  var fim = dig.slice(-8);
+  return clientesCache.filter(function(c){ return c.dig && (dig.length >= 10 ? c.dig.slice(-8) === fim : c.dig.indexOf(dig) !== -1); }).slice(0, 6);
 }
 
 function sugerirClientes(modo){
-  var achados = acharClientes(modo);
+  modo = 'tel';
+  var achados = acharClientes();
   sugestoesAtuais = achados;
   var boxTel = document.getElementById('sug-tel'), boxNome = document.getElementById('sug-nome');
   if(boxTel) boxTel.style.display = 'none';
@@ -1686,7 +1700,7 @@ function sugerirClientes(modo){
   if(box && achados.length){
     box.innerHTML = achados.map(function(c, i){
       return '<div class="sug-item" onmousedown="event.preventDefault();escolherClienteSugerido(' + i + ')" ontouchstart="event.preventDefault();escolherClienteSugerido(' + i + ')">'
-        + '<span>' + escaparHtmlSimples(c.nome || '(sem nome)') + '</span><small>' + escaparHtmlSimples(c.whats || '') + '</small></div>';
+        + '<span>' + escaparHtmlSimples(c.nome || '(sem nome)') + '</span><small>' + escaparHtmlSimples(formatarTelefone(c.whats) || '') + '</small></div>';
     }).join('');
     box.style.display = 'block';
   }
@@ -1698,7 +1712,7 @@ function escaparHtmlSimples(t){ return String(t).replace(/[&<>"]/g, function(c){
 function escolherClienteSugerido(i){
   var c = sugestoesAtuais[i]; if(!c) return;
   definirCampo('cnome', c.nome);
-  definirCampo('ctel', c.whats);
+  definirCampo('ctel', formatarTelefone(c.whats));
   atualizarLinkWhatsApp();
   ['sug-tel','sug-nome'].forEach(function(id){ var el = document.getElementById(id); if(el) el.style.display = 'none'; });
   var st = document.getElementById('cliente-status');
